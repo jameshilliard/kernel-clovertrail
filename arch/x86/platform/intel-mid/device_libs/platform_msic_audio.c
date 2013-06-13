@@ -17,6 +17,7 @@
 #include <linux/sfi.h>
 #include <linux/platform_device.h>
 #include <linux/mfd/intel_msic.h>
+#include <linux/jack.h>
 #include <asm/platform_sst_audio.h>
 #include <asm/intel-mid.h>
 #include <asm/intel_mid_remoteproc.h>
@@ -41,6 +42,19 @@ static struct msic_audio_platform_data msic_audio_pdata = {
 	.spid = &spid,
 };
 
+#ifdef CONFIG_JACK_MON
+static struct jack_platform_data jack_data = {
+	.usb_online             = -1,
+	.charger_online         = -1,
+	.hdmi_online            = -1,
+	.earjack_online         = 0,
+	.earkey_online          = 0,
+	.ums_online             = -1,
+	.cdrom_online           = -1,
+	.jig_online             = -1,
+};
+#endif
+
 void *msic_audio_platform_data(void *info)
 {
 	int i;
@@ -50,6 +64,26 @@ void *msic_audio_platform_data(void *info)
 
 	if (add_sst_platform_device() < 0)
 		return NULL;
+
+#ifdef CONFIG_JACK_MON
+	pdev = platform_device_alloc("jack", -1);
+	if (!pdev) {
+		pr_err("failed to allocate jack platform device\n");
+		return NULL;
+	}
+
+	if (platform_device_add_data(pdev, &jack_data, sizeof(jack_data))) {
+		pr_err("failed to add platform data to jack platform device\n");
+		platform_device_put(pdev);
+		return NULL;
+	}
+
+	if (platform_device_add(pdev)) {
+		pr_err("failed to add jack platform device\n");
+		platform_device_put(pdev);
+		return NULL;
+	}
+#endif
 
 	pdev = platform_device_alloc("hdmi-audio", -1);
 	if (!pdev) {
