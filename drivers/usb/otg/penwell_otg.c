@@ -38,7 +38,8 @@
 #include <linux/delay.h>
 #include <linux/pm_runtime.h>
 #include <linux/wakelock.h>
- #include <asm/intel_scu_pmic.h>
+#include <linux/jack.h>
+#include <asm/intel_scu_pmic.h>
 #include <asm/intel_scu_ipc.h>
 #include <asm/intel-mid.h>
 #include "../core/usb.h"
@@ -2946,6 +2947,14 @@ static void penwell_otg_sdp_check_work(struct work_struct *work)
 	penwell_otg_update_chrg_cap(CHRG_SDP_INVAL, CHRG_CURR_SDP_INVAL);
 }
 
+static bool connected(enum usb_otg_state state)
+{
+	if (state == OTG_STATE_A_HOST || state == OTG_STATE_A_PERIPHERAL ||
+			state == OTG_STATE_B_HOST || state == OTG_STATE_B_PERIPHERAL)
+		return true;
+	return false;
+}
+
 static void penwell_otg_work(struct work_struct *work)
 {
 	struct penwell_otg		*pnw = container_of(work,
@@ -2957,9 +2966,12 @@ static void penwell_otg_work(struct work_struct *work)
 	int				retval;
 	struct pci_dev			*pdev;
 	unsigned long			flags;
+	enum usb_otg_state old_state;
+	enum usb_otg_state new_state;
 
+	old_state = iotg->otg.state;
 	dev_dbg(pnw->dev,
-		"old state = %s\n", state_string(iotg->otg.state));
+		"old state = %s\n", state_string(old_state));
 
 	pm_runtime_get_sync(pnw->dev);
 
@@ -4231,8 +4243,16 @@ static void penwell_otg_work(struct work_struct *work)
 
 	pm_runtime_put_sync(pnw->dev);
 
+	new_state = iotg->otg.state;
 	dev_dbg(pnw->dev,
-			"new state = %s\n", state_string(iotg->otg.state));
+		"new state = %s\n", state_string(new_state));
+
+#ifdef CONFIG_JACK_MON
+	if (connected(old_state) && !connected(new_state))
+		jack_event_handler("usb", 0);
+	else if (!connected(old_state) && connected(new_state))
+		jack_event_handler("usb", 1);
+#endif
 }
 
 static ssize_t

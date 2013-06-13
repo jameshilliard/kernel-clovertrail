@@ -30,7 +30,7 @@ static struct ctp_audio_platform_data ctp_audio_pdata = {
 
 #ifdef CONFIG_JACK_MON
 static struct jack_platform_data jack_data = {
-	.usb_online             = -1,
+	.usb_online             = 0,
 	.charger_online         = -1,
 	.hdmi_online            = -1,
 	.earjack_online         = 0,
