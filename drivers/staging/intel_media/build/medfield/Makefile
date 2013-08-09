@@ -114,7 +114,6 @@ sgx-objs += $(ENVDIR)/osfunc.o \
 		$(SGXDIR)/sgxtransfer.o \
 		$(SGXDIR)/mmu.o \
 		$(SGXDIR)/pb.o
-obj-m += sgx.o
 
 gfx-y += $(FBDEVDIR)/drmlfb_displayclass.o \
 		$(FBDEVDIR)/drmlfb_linux.o
@@ -191,3 +190,5 @@ obj-$(CONFIG_DRM_MDFLD) += gfx.o
 obj-$(CONFIG_DRM_CTP) += gfx.o
 
 obj-$(CONFIG_SUPPORT_HDMI) += $(HDMI_DIR)/
+
+obj-y += sgx.o
