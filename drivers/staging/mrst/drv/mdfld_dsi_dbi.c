@@ -109,10 +109,15 @@ void intel_dsi_dbi_update_fb(struct mdfld_dsi_dbi_output *dbi_output)
 		return -EINVAL;
 	}
 
+	/* For unknown reason yet, although X with fb driver launches
+	   successfully, but there is nothing show up in the panel/screen,
+	   this is a temporary work around to enable: comment out this
+	   return.
 	if ((dbi_output->mode_flags & MODE_SETTING_ON_GOING) ||
 	    (psb_crtc && (psb_crtc->mode_flags & MODE_SETTING_ON_GOING)) ||
 	    !(dbi_output->mode_flags & MODE_SETTING_ENCODER_DONE))
 		return;
+	*/
 
 	if (pipe == 2) {
 		dspcntr_reg = DSPCCNTR;
