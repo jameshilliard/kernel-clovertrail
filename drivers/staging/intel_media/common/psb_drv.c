@@ -1734,6 +1734,9 @@ static int psb_driver_load(struct drm_device *dev, unsigned long chipset)
 			destroy_workqueue(te_wq);
 			goto out_err;
 		}
+
+		/*enable TE, will need it in panel power on*/
+		mdfld_enable_te(dev, 0);
 	}
 
 	if (drm_psb_no_fb == 0)
