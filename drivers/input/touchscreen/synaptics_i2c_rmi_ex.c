@@ -990,32 +990,27 @@ static void synaptics_rmi4_work_func(struct work_struct *work)
                        finger_reg = &f11_data[reg];
                        y = (finger_reg[1] * 0x10) | (finger_reg[2] / 0x10);
 
-                      if(0)    //(y>=1893)     /*key area*/
+                      if (y >= MAX_Y_FOR_LCD)     /*key area*/
                       {
 
         				finger_status = f11_data[0]& 3;    //finger0 status
                                    x = (finger_reg[0] * 0x10) | (finger_reg[2] % 0x10);
 				     
-			                  if((x < 268))
+			                  if((x < 350))
 					    {
-				                  input_report_key(ts->input_dev, KEY_MENU, finger_status);
+				                  input_report_key(ts->input_dev, KEY_BACK, finger_status);
 						     input_sync(ts->input_dev);
 			                   }	
-					     else if ((x > 362)&&(x < 562)) 
+					     else if ((x > 640)&&(x < 830))
 					     {
 				                   input_report_key(ts->input_dev, KEY_HOME, finger_status);
 						     input_sync(ts->input_dev);
 			                    }
-					     else if ((x > 642)&&(x < 842))
+					     else if ((x > 1130)&&(x < 1260))
 					     {
-				                  input_report_key(ts->input_dev, KEY_BACK, finger_status);
+				                  input_report_key(ts->input_dev, KEY_MENU, finger_status);
 						     input_sync(ts->input_dev);
 			                   }
-					     else if((x > 897)) 
-					     {
-				                   input_report_key(ts->input_dev, KEY_SEARCH, finger_status);
-						     input_sync(ts->input_dev);
-			                   }	
 					     else
 					     {
                                              printk("press NULL, (%d,%d)\n",x,y);
@@ -1096,6 +1091,16 @@ static void synaptics_rmi4_work_func(struct work_struct *work)
 				function.
 				*/
 
+				 if (fingerDownCount == 1) {
+					ts->oldX = x;
+					ts->oldY = y;
+					input_report_abs(ts->input_dev, ABS_X, x);
+					input_report_abs(ts->input_dev, ABS_Y, y);
+					input_report_abs(ts->input_dev, ABS_PRESSURE, z);
+					input_report_abs(ts->input_dev, ABS_TOOL_WIDTH,
+							max(wx, wy));
+				 }
+
 #ifdef CONFIG_SYNA_MULTI_TOUCH
 				/* Report Multi-Touch events for each finger */
 				/* major axis of touch area ellipse */
@@ -1167,17 +1172,17 @@ static void synaptics_rmi4_work_func(struct work_struct *work)
 		ts->wasdown = false;
 
 #ifdef CONFIG_SYNA_MULTI_TOUCH
-	//	input_report_abs(ts->input_dev, ABS_MT_TOUCH_MAJOR, 0);
-	//	input_report_abs(ts->input_dev, ABS_MT_WIDTH_MAJOR, 0);
-	//	input_report_abs(ts->input_dev, ABS_MT_POSITION_X, ts->oldX);
-	//	input_report_abs(ts->input_dev, ABS_MT_POSITION_Y, ts->oldY);
+		input_report_abs(ts->input_dev, ABS_MT_TOUCH_MAJOR, 0);
+		input_report_abs(ts->input_dev, ABS_MT_WIDTH_MAJOR, 0);
+		input_report_abs(ts->input_dev, ABS_MT_POSITION_X, ts->oldX);
+		input_report_abs(ts->input_dev, ABS_MT_POSITION_Y, ts->oldY);
 		//input_report_abs(ts->input_dev, ABS_MT_TRACKING_ID, 1);
 		input_mt_sync(ts->input_dev);
               input_report_key(ts->input_dev,BTN_TOUCH, 0);
 #endif
 
-	//	input_report_abs(ts->input_dev, ABS_X, ts->oldX);
-	//	input_report_abs(ts->input_dev, ABS_Y, ts->oldY);
+		input_report_abs(ts->input_dev, ABS_X, ts->oldX);
+		input_report_abs(ts->input_dev, ABS_Y, ts->oldY);
 		ts->oldX = ts->oldY = 0;
         
              /*ZTE: modified by tong.weili for dynamic print 20120202 ++*/
@@ -1334,22 +1339,22 @@ static int synaptics_rmi4_probe(
 	set_bit(EV_ABS, ts->input_dev->evbit);
 	set_bit(EV_SYN, ts->input_dev->evbit);
 	set_bit(EV_KEY, ts->input_dev->evbit);
-	
+
 	/* set dummy key to make driver work with virtual keys */
 	input_set_capability(ts->input_dev, EV_KEY, KEY_PROG1);
 	
       //shihuiqin added ++
-//	set_bit(ABS_MT_TOUCH_MAJOR, ts->input_dev->absbit);
-//	set_bit(ABS_MT_POSITION_X, ts->input_dev->absbit);
-//	set_bit(ABS_MT_POSITION_Y, ts->input_dev->absbit);
-//	set_bit(ABS_MT_WIDTH_MAJOR, ts->input_dev->absbit);
+	set_bit(ABS_MT_TOUCH_MAJOR, ts->input_dev->absbit);
+	set_bit(ABS_MT_POSITION_X, ts->input_dev->absbit);
+	set_bit(ABS_MT_POSITION_Y, ts->input_dev->absbit);
+	set_bit(ABS_MT_WIDTH_MAJOR, ts->input_dev->absbit);
 	//shihuiqin added --
 
 
 /*shihuiqin 20110519 added for touchkey++*/
-	//set_bit(KEY_BACK, ts->input_dev->keybit);
-	//set_bit(KEY_MENU, ts->input_dev->keybit);
-	//set_bit(KEY_HOME, ts->input_dev->keybit);
+	set_bit(KEY_BACK, ts->input_dev->keybit);
+	set_bit(KEY_MENU, ts->input_dev->keybit);
+	set_bit(KEY_HOME, ts->input_dev->keybit);
 	//set_bit(KEY_SEARCH, ts->input_dev->keybit);
 	set_bit(BTN_TOUCH, ts->input_dev->keybit);
 	set_bit(BTN_2, ts->input_dev->keybit);
@@ -1360,17 +1365,17 @@ static int synaptics_rmi4_probe(
 	if (ts->hasF11) {
 
 	printk( "%s: Set ranges X=[%d..%d] Y=[%d..%d].", __func__, min_x, ts->f11_max_x, min_y, ts->f11_max_y);
-//	input_set_abs_params(ts->input_dev, ABS_X, min_x, ts->f11_max_x,0, 0);
-//	input_set_abs_params(ts->input_dev, ABS_Y, min_y, ts->f11_max_y,0, 0);
-//	input_set_abs_params(ts->input_dev, ABS_PRESSURE, 0, 255, 0, 0);
-//	input_set_abs_params(ts->input_dev, ABS_TOOL_WIDTH, 0, 15, 0, 0);
+	input_set_abs_params(ts->input_dev, ABS_X, min_x, ts->f11_max_x,0, 0);
+	input_set_abs_params(ts->input_dev, ABS_Y, min_y, ts->f11_max_y,0, 0);
+	input_set_abs_params(ts->input_dev, ABS_PRESSURE, 0, 255, 0, 0);
+	input_set_abs_params(ts->input_dev, ABS_TOOL_WIDTH, 0, 15, 0, 0);
 
 #ifdef CONFIG_SYNA_MULTI_TOUCH
-//	input_set_abs_params(ts->input_dev, ABS_MT_TOUCH_MAJOR, 0, 15, 0, 0);   /*pressure of single-touch*/
-//	input_set_abs_params(ts->input_dev, ABS_MT_TOUCH_MINOR, 0, 15, 0, 0);
-////	input_set_abs_params(ts->input_dev, ABS_MT_ORIENTATION, 0, 1, 0, 0);
-//	input_set_abs_params(ts->input_dev, ABS_MT_TRACKING_ID, 1, ts->f11.points_supported, 0, 0);
-//	input_set_abs_params(ts->input_dev, ABS_MT_WIDTH_MAJOR, 0, 255, 0, 0);   /*ABS_TOOL_WIDTH of single-touch*/
+	input_set_abs_params(ts->input_dev, ABS_MT_TOUCH_MAJOR, 0, 15, 0, 0);   /*pressure of single-touch*/
+	input_set_abs_params(ts->input_dev, ABS_MT_TOUCH_MINOR, 0, 15, 0, 0);
+	input_set_abs_params(ts->input_dev, ABS_MT_ORIENTATION, 0, 1, 0, 0);
+	input_set_abs_params(ts->input_dev, ABS_MT_TRACKING_ID, 1, ts->f11.points_supported, 0, 0);
+	input_set_abs_params(ts->input_dev, ABS_MT_WIDTH_MAJOR, 0, 255, 0, 0);   /*ABS_TOOL_WIDTH of single-touch*/
 	input_set_abs_params(ts->input_dev, ABS_MT_PRESSURE, 0, 255, 0, 0);   /*ABS_TOOL_WIDTH of single-touch*/
 
 	input_set_abs_params(ts->input_dev, ABS_MT_POSITION_X, min_x, ts->f11_max_x,0, 0);
