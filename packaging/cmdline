@@ -1,0 +1,1 @@
+pci=noearly console=tty0 console=ttyS0 console=logk0 console=ttyMFD2,115200n8 earlyprintk=nologger loglevel=4 hsu_dma=7 kmemleak=off ptrace.ptrace_can_access=1 androidboot.bootmedia=sdcard androidboot.hardware=redhookbay emmc_ipanic.ipanic_part_number=1 noinitrd root=/dev/mmcblk0p2 rootwait intel_scu_watchdog.disable_kernel_watchdog=1 vmalloc=172M vt.global_cursor_default=0

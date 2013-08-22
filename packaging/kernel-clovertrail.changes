@@ -1,0 +1,18 @@
+* Tue Aug 22 2013 Austin Zhang <austin.zhang@intel.com>
+- Added package folder/files for redhookbay kernel
+- Fixed compiling issue with Tizen's old gcc
+
+* Thu Aug 22 2013 Yin Kangkai <kangkai.yin@intel.com> submit/tizen_2.2_stable/20130822.104948
+- Initial import.
+- touch/synaptics_i2c_rmi_ex: separate touchkey into different input device
+- touch/synaptics_i2c_rmi_ex: indent only
+- touch/synaptics_i2c_rmi_ex: enable the touch driver
+- gfx/fb: another work around to enable X with frame buffer
+- gfx/fb: work around to enable X with frame buffer
+- Export usb connection status
+- Misc: import Jack Monitoring Interface from samsung
+- gfx: build in sgx.o and make sure sgx.o is load after gfx.o
+- Support usb mode framework in Tizen
+- Change adb protocol to sdb protocol
+- configs: i386_tizen_defconfig
+- intel_mdf_battery.c: Fix build error section mismatch
