@@ -2674,7 +2674,7 @@ static int ffl_tty_ioctl(struct tty_struct *tty,
 		case HSI_FLOW_SYNC:
 		case HSI_FLOW_PIPE:
 			spin_lock_irqsave(&ctx->tx.lock, flags);
-			ctx->tx.config.flow = arg;
+			ctx->tx.config.u.flow = arg;
 			spin_unlock_irqrestore(&ctx->tx.lock, flags);
 			break;
 		default:
@@ -2684,7 +2684,7 @@ static int ffl_tty_ioctl(struct tty_struct *tty,
 
 	case FFL_TTY_GET_TX_FLOW:
 		spin_lock_irqsave(&ctx->tx.lock, flags);
-		data = ctx->tx.config.flow;
+		data = ctx->tx.config.u.flow;
 		spin_unlock_irqrestore(&ctx->tx.lock, flags);
 		return put_user(data, (unsigned int __user *) arg);
 		break;
@@ -2694,7 +2694,7 @@ static int ffl_tty_ioctl(struct tty_struct *tty,
 		case HSI_FLOW_SYNC:
 		case HSI_FLOW_PIPE:
 			spin_lock_irqsave(&ctx->rx.lock, flags);
-			ctx->client->rx_cfg.flow = arg;
+			ctx->client->rx_cfg.u.flow = arg;
 			spin_unlock_irqrestore(&ctx->rx.lock, flags);
 			break;
 		default:
@@ -2704,7 +2704,7 @@ static int ffl_tty_ioctl(struct tty_struct *tty,
 
 	case FFL_TTY_GET_RX_FLOW:
 		spin_lock_irqsave(&ctx->rx.lock, flags);
-		data = ctx->rx.config.flow;
+		data = ctx->rx.config.u.flow;
 		spin_unlock_irqrestore(&ctx->rx.lock, flags);
 		return put_user(data, (unsigned int __user *) arg);
 		break;
@@ -2844,7 +2844,7 @@ static int ffl_tty_ioctl(struct tty_struct *tty,
 		case HSI_ARB_RR:
 		case HSI_ARB_PRIO:
 			spin_lock_irqsave(&ctx->tx.lock, flags);
-			ctx->tx.config.arb_mode = arg;
+			ctx->tx.config.u.arb_mode = arg;
 			spin_unlock_irqrestore(&ctx->tx.lock, flags);
 			break;
 		default:
@@ -2854,7 +2854,7 @@ static int ffl_tty_ioctl(struct tty_struct *tty,
 
 	case FFL_TTY_GET_TX_ARB_MODE:
 		spin_lock_irqsave(&ctx->tx.lock, flags);
-		data = ctx->tx.config.arb_mode;
+		data = ctx->tx.config.u.arb_mode;
 		spin_unlock_irqrestore(&ctx->tx.lock, flags);
 		return put_user(data, (unsigned int __user *) arg);
 		break;

@@ -33,86 +33,66 @@ static struct hsi_board_info hsi_info[HSI_MID_MAX_CLIENTS] = {
 		.name = "client0",
 		.hsi_id = 0,
 		.port = 0,
-		.tx_cfg = {
-			.mode		= HSI_MODE_FRAME,
-			.channels	= 8,
-			.speed		= 200000, /* 200 MHz */
-			.arb_mode	= HSI_ARB_RR,
-		},
-		.rx_cfg = {
-			.mode		= HSI_MODE_FRAME,
-			.channels	= 8,
-			.speed		= 200000, /* 200 MHz but used in tx */
-			.flow	= HSI_FLOW_PIPE,
-		},
+		.tx_cfg.mode		= HSI_MODE_FRAME,
+		.tx_cfg.channels	= 8,
+		.tx_cfg.speed		= 200000, /* 200 MHz */
+		.tx_cfg.u.arb_mode	= HSI_ARB_RR,
+		.rx_cfg.mode		= HSI_MODE_FRAME,
+		.rx_cfg.channels	= 8,
+		.rx_cfg.speed		= 200000, /* 200 MHz but used in tx */
+		.rx_cfg.u.flow	= HSI_FLOW_PIPE,
 	},
 	[1] =   {
 		.name = "client1",
 		.hsi_id = 0,
 		.port = 0,
-		.tx_cfg = {
-			.mode		= HSI_MODE_FRAME,
-			.channels	= 8,
-			.speed		= 200000, /* 200 MHz */
-			.arb_mode	= HSI_ARB_RR,
-		},
-		.rx_cfg = {
-			.mode		= HSI_MODE_FRAME,
-			.channels	= 8,
-			.speed		= 200000, /* 200 MHz but used in tx */
-			.flow	= HSI_FLOW_PIPE,
-		},
+		.tx_cfg.mode		= HSI_MODE_FRAME,
+		.tx_cfg.channels	= 8,
+		.tx_cfg.speed		= 200000, /* 200 MHz */
+		.tx_cfg.u.arb_mode	= HSI_ARB_RR,
+		.rx_cfg.mode		= HSI_MODE_FRAME,
+		.rx_cfg.channels	= 8,
+		.rx_cfg.speed		= 200000, /* 200 MHz but used in tx */
+		.rx_cfg.u.flow	= HSI_FLOW_PIPE,
 	},
 	[2] =   {
 		.name = "client2",
 		.hsi_id = 0,
 		.port = 0,
-		.tx_cfg = {
-			.mode		= HSI_MODE_FRAME,
-			.channels	= 8,
-			.speed		= 200000, /* 200 MHz */
-			.arb_mode	= HSI_ARB_RR,
-		},
-		.rx_cfg = {
-			.mode		= HSI_MODE_FRAME,
-			.channels	= 8,
-			.speed		= 200000, /* 200 MHz but used in tx */
-			.flow	= HSI_FLOW_PIPE,
-		},
+		.tx_cfg.mode		= HSI_MODE_FRAME,
+		.tx_cfg.channels	= 8,
+		.tx_cfg.speed		= 200000, /* 200 MHz */
+		.tx_cfg.u.arb_mode	= HSI_ARB_RR,
+		.rx_cfg.mode		= HSI_MODE_FRAME,
+		.rx_cfg.channels	= 8,
+		.rx_cfg.speed		= 200000, /* 200 MHz but used in tx */
+		.rx_cfg.u.flow	= HSI_FLOW_PIPE,
 	},
 	[3] =   {
 		.name = "client3",
 		.hsi_id = 0,
 		.port = 0,
-		.tx_cfg = {
-			.mode		= HSI_MODE_FRAME,
-			.channels	= 8,
-			.speed		= 200000, /* 200 MHz */
-			.arb_mode	= HSI_ARB_RR,
-		},
-		.rx_cfg = {
-			.mode		= HSI_MODE_FRAME,
-			.channels	= 8,
-			.speed		= 200000, /* 200 MHz but used in tx */
-			.flow	= HSI_FLOW_PIPE,
-		},
+		.tx_cfg.mode		= HSI_MODE_FRAME,
+		.tx_cfg.channels	= 8,
+		.tx_cfg.speed		= 200000, /* 200 MHz */
+		.tx_cfg.u.arb_mode	= HSI_ARB_RR,
+		.rx_cfg.mode		= HSI_MODE_FRAME,
+		.rx_cfg.channels	= 8,
+		.rx_cfg.speed		= 200000, /* 200 MHz but used in tx */
+		.rx_cfg.u.flow	= HSI_FLOW_PIPE,
 	},
 	[4] = {
 		.name = "hsi_flash",
 		.hsi_id = 0,
 		.port = 0,
-		.tx_cfg = {
-			.mode		= HSI_MODE_FRAME,
-			.channels	= 1,
-			.speed		= 5000, /* 5 MHz */
-			.arb_mode	= HSI_ARB_RR,
-		},
-		.rx_cfg = {
-			.mode		= HSI_MODE_FRAME,
-			.channels	= 1,
-			.speed		= 0,
-			.flow	= HSI_FLOW_SYNC,
-		},
+		.tx_cfg.mode		= HSI_MODE_FRAME,
+		.tx_cfg.channels	= 1,
+		.tx_cfg.speed		= 5000, /* 5 MHz */
+		.tx_cfg.u.arb_mode	= HSI_ARB_RR,
+		.rx_cfg.mode		= HSI_MODE_FRAME,
+		.rx_cfg.channels	= 1,
+		.rx_cfg.speed		= 0,
+		.rx_cfg.u.flow	= HSI_FLOW_SYNC,
 	},
 };
 

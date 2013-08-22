@@ -82,7 +82,7 @@ struct hsi_config {
 	union {
 		unsigned int	flow;		/* RX only */
 		unsigned int	arb_mode;	/* TX only */
-	};
+	} u;
 };
 
 /**

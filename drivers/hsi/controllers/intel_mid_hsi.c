@@ -2958,7 +2958,7 @@ static int hsi_mid_setup(struct hsi_client *cl)
 	intel_hsi->tx_speed = cl->tx_cfg.speed;
 
 	/* Compute the arbiter control register */
-	arb_cfg	= cl->tx_cfg.arb_mode;
+	arb_cfg	= cl->tx_cfg.u.arb_mode;
 
 	/* Compute the RX timeout value (for inserting RX error) */
 
@@ -2977,7 +2977,7 @@ static int hsi_mid_setup(struct hsi_client *cl)
 	/* Compute the program, FIFO , DMA and interrupt registers */
 	prg_cfg		= ARASAN_RX_TIMEOUT_CNT(rx_timeout) |
 			  ARASAN_TX_MODE(cl->tx_cfg.mode) |
-			  ARASAN_RX_FLOW(cl->rx_cfg.flow) |
+			  ARASAN_RX_FLOW(cl->rx_cfg.u.flow) |
 			  ARASAN_RX_MODE(cl->rx_cfg.mode);
 	irq_cfg		= ARASAN_IRQ_RX_WAKE;
 	err_cfg		= ARASAN_IRQ_BREAK | ARASAN_IRQ_RX_ERROR;

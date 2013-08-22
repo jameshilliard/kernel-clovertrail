@@ -34,8 +34,8 @@ void *edlp_modem_platform_data(void *data)
 			.tx_cfg.speed = 200000,	/* tx clock, kHz */
 			.tx_cfg.channels = 8,
 			.tx_cfg.mode = HSI_MODE_FRAME,
-			.tx_cfg.arb_mode = HSI_ARB_RR,
-			.rx_cfg.flow = HSI_FLOW_SYNC,
+			.tx_cfg.u.arb_mode = HSI_ARB_RR,
+			.rx_cfg.u.flow = HSI_FLOW_SYNC,
 			.rx_cfg.mode = HSI_MODE_FRAME,
 			.rx_cfg.channels = 8
 		},
@@ -47,8 +47,8 @@ void *edlp_modem_platform_data(void *data)
 			.tx_cfg.speed = 100000,	/* tx clock, kHz */
 			.tx_cfg.channels = 8,
 			.tx_cfg.mode = HSI_MODE_FRAME,
-			.tx_cfg.arb_mode = HSI_ARB_RR,
-			.rx_cfg.flow = HSI_FLOW_SYNC,
+			.tx_cfg.u.arb_mode = HSI_ARB_RR,
+			.rx_cfg.u.flow = HSI_FLOW_SYNC,
 			.rx_cfg.mode = HSI_MODE_FRAME,
 			.rx_cfg.channels = 8
 		}
