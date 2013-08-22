@@ -84,7 +84,7 @@ as well as various kernel internal events.
 sed -i "s/^EXTRAVERSION.*/EXTRAVERSION = -%{release}-%{variant}/" Makefile
 
 # Build kernel and modules
-make -s ARCH=%{kernel_arch} i386_tizen_defconfig
+make -s ARCH=%{kernel_arch} tizen_clovertrail_defconfig
 make -s ARCH=%{kernel_arch} %{?_smp_mflags} bzImage
 make -s ARCH=%{kernel_arch} %{?_smp_mflags} modules
 
