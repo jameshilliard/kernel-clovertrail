@@ -1066,20 +1066,20 @@ static void synaptics_rmi4_work_func(struct work_struct *work)
 							      0x10);
 
 				if ((x < 350)) {
-					input_report_key(ts->input_dev,
+					input_report_key(ts->touchkey_input_dev,
 							 KEY_BACK,
 							 finger_status);
-					input_sync(ts->input_dev);
+					input_sync(ts->touchkey_input_dev);
 				} else if ((x > 640) && (x < 830)) {
-					input_report_key(ts->input_dev,
+					input_report_key(ts->touchkey_input_dev,
 							 KEY_HOME,
 							 finger_status);
-					input_sync(ts->input_dev);
+					input_sync(ts->touchkey_input_dev);
 				} else if ((x > 1130) && (x < 1260)) {
-					input_report_key(ts->input_dev,
+					input_report_key(ts->touchkey_input_dev,
 							 KEY_MENU,
 							 finger_status);
-					input_sync(ts->input_dev);
+					input_sync(ts->touchkey_input_dev);
 				} else {
 					printk("press NULL, (%d,%d)\n", x, y);
 				}
@@ -1449,6 +1449,16 @@ static int synaptics_rmi4_probe(struct i2c_client *client,
 	ts->input_dev->name = "Synaptics_RMI4";
 	ts->input_dev->phys = client->name;
 
+	ts->touchkey_input_dev = input_allocate_device();
+	if (!ts->touchkey_input_dev) {
+		printk(KERN_ERR "failed to allocate touchkey input device.\n");
+		ret = -EBUSY;
+		goto err_alloc_dev_failed2;
+	}
+
+	ts->touchkey_input_dev->name = "Synaptics_RMI4_touchkey";
+	ts->touchkey_input_dev->phys = client->name;
+
 	/*ZTE: modified by tong.weili for synaptics ¼æÈÝ¶àÖÖsensor 20120401 ++ */
 	if (Type_S3000 == s_synaptics_Sensor_type) {
 		ts->f11_max_x = 1077;
@@ -1551,6 +1561,21 @@ static int synaptics_rmi4_probe(struct i2c_client *client,
 		}
 	}
 
+	set_bit(EV_SYN, ts->touchkey_input_dev->evbit);
+	set_bit(EV_KEY, ts->touchkey_input_dev->evbit);
+	set_bit(KEY_BACK, ts->touchkey_input_dev->keybit);
+	set_bit(KEY_MENU, ts->touchkey_input_dev->keybit);
+	set_bit(KEY_HOME, ts->touchkey_input_dev->keybit);
+
+	ret = input_register_device(ts->touchkey_input_dev);
+	if (ret) {
+		printk(KERN_ERR "synaptics_rmi4_probe: Unable to register %s \
+				input device\n", ts->touchkey_input_dev->name);
+		goto err_input_register_device_failed;
+	} else {
+		printk("synaptics touchkey input device registered\n");
+	}
+
 	/*
 	 * Device will be /dev/input/event#
 	 * For named device files, use udev
@@ -1559,7 +1584,7 @@ static int synaptics_rmi4_probe(struct i2c_client *client,
 	if (ret) {
 		printk(KERN_ERR "synaptics_rmi4_probe: Unable to register %s \
 				input device\n", ts->input_dev->name);
-		goto err_input_register_device_failed;
+		goto err_input_register_device_failed2;
 	} else {
 		printk("synaptics input device registered\n");
 	}
@@ -1688,7 +1713,14 @@ static int synaptics_rmi4_probe(struct i2c_client *client,
 
 	return 0;
 
+err_input_register_device_failed2:
+	input_unregister_device(ts->touchkey_input_dev);
+
 err_input_register_device_failed:
+	input_free_device(ts->input_dev);
+	input_free_device(ts->touchkey_input_dev);
+
+err_alloc_dev_failed2:
 	input_free_device(ts->input_dev);
 
 err_alloc_dev_failed:
@@ -1711,6 +1743,7 @@ static int synaptics_rmi4_remove(struct i2c_client *client)
 	else
 		hrtimer_cancel(&ts->timer);
 	input_unregister_device(ts->input_dev);
+	input_unregister_device(ts->touchkey_input_dev);
 	if (ts != NULL) {
 		kfree(ts);
 	}

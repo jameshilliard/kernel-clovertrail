@@ -64,6 +64,7 @@ struct f11_finger_data {
 struct synaptics_rmi4 {
 	struct i2c_client *client;
 	struct input_dev *input_dev;
+	struct input_dev *touchkey_input_dev;
 	int use_irq;
 	struct hrtimer timer;
 	struct work_struct  work;
