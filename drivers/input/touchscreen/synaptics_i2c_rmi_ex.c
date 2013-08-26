@@ -39,6 +39,19 @@
 #include <linux/slab.h>
 #include <linux/regulator/consumer.h>	/*ZTE: added by tong.weili for Touch Power 20111116 */
 
+#ifndef CONFIG_HAS_EARLYSUSPEND
+#include <drm/drm_mode.h>
+
+static bool touch_status;
+static bool enter_notifier;
+static struct i2c_client *client_noti;
+static int touch_screen_notifier_callback(struct notifier_block *self,
+				unsigned long event_type, void *nt_data);
+extern int screen_register_receiver(struct notifier_block *nb);
+extern int screen_unregister_receiver(struct notifier_block *nb);
+
+#endif
+
 //#define TS_WATCHDOG  /*ZTE: deleted by tong.weili 20120908*/
 #define USE_HRTIMER_4WATCHDOG	0
 
@@ -1645,6 +1658,12 @@ static int synaptics_rmi4_probe(struct i2c_client *client,
 	ts->early_suspend.suspend = synaptics_rmi4_early_suspend;
 	ts->early_suspend.resume = synaptics_rmi4_late_resume;
 	register_early_suspend(&ts->early_suspend);
+#else
+	touch_status = true;
+	enter_notifier = false;
+	ts->screen_notifier.notifier_call = touch_screen_notifier_callback;
+	screen_register_receiver(&ts->screen_notifier);
+	client_noti = ts->client;
 #endif
 
 #ifdef CONFIG_HAS_VIRTUALKEY
@@ -1737,7 +1756,12 @@ err_check_functionality_failed:
 static int synaptics_rmi4_remove(struct i2c_client *client)
 {
 	struct synaptics_rmi4 *ts = i2c_get_clientdata(client);
-	//unregister_early_suspend(&ts->early_suspend);
+#ifdef CONFIG_HAS_EARLYSUSPEND
+	unregister_early_suspend(&ts->early_suspend);
+#else
+	if(&ts->screen_notifier != NULL)
+		screen_unregister_receiver(&ts->screen_notifier);
+#endif
 	if (ts->use_irq)
 		free_irq(client->irq, ts);
 	else
@@ -1755,6 +1779,11 @@ static int synaptics_rmi4_suspend(struct i2c_client *client, pm_message_t mesg)
 {
 	int ret;
 	struct synaptics_rmi4 *ts = i2c_get_clientdata(client);
+
+#ifndef CONFIG_HAS_EARLYSUSPEND
+	if (touch_status == false)
+		return 0;
+#endif
 
 	if (ts->use_irq) {
 		disable_irq(client->irq);
@@ -1785,6 +1814,11 @@ static int synaptics_rmi4_suspend(struct i2c_client *client, pm_message_t mesg)
 static int synaptics_rmi4_resume(struct i2c_client *client)
 {
 	struct synaptics_rmi4 *ts = i2c_get_clientdata(client);
+
+#ifndef CONFIG_HAS_EARLYSUSPEND
+	if ((touch_status == true) || (enter_notifier == false))
+		return 0;
+#endif
 
 	//write max x
 	synaptics_i2c_write(ts->client, (s_F11_CTRL_00 + 6),
@@ -1838,6 +1872,40 @@ static void synaptics_rmi4_late_resume(struct early_suspend *h)
 	ts = container_of(h, struct synaptics_rmi4, early_suspend);
 	synaptics_rmi4_resume(ts->client);
 }
+#else
+static int touch_screen_notifier_callback(struct notifier_block *self,
+				unsigned long event_type, void *nt_data)
+{
+	struct device *dev = &client_noti->dev;
+	pm_message_t    placeholder;
+
+	if(dev == NULL)
+		return 0;
+
+	switch (event_type) {
+	case DRM_MODE_DPMS_ON:
+		if (touch_status == false) {
+			enter_notifier = true;
+			dev_dbg(dev, "screen notifier chain - synaptics_rmi4: DPMS_ON\n");
+			synaptics_rmi4_resume(client_noti);
+			enter_notifier = false;
+			touch_status = true;
+		}
+		break;
+	case DRM_MODE_DPMS_OFF:
+		if (touch_status == true) {
+			placeholder.event = PM_EVENT_SUSPEND;
+			dev_dbg(dev, "screen notifier chain - synaptics_rmi4: DPMS_OFF\n");
+			synaptics_rmi4_suspend(client_noti, placeholder);
+			touch_status = false;
+		}
+		break;
+	default:
+		break;
+	}
+
+	return 0;
+}
 #endif
 
 static const struct i2c_device_id synaptics_rmi4_id[] = {
@@ -1848,10 +1916,8 @@ static const struct i2c_device_id synaptics_rmi4_id[] = {
 static struct i2c_driver synaptics_rmi4_driver = {
 	.probe = synaptics_rmi4_probe,
 	.remove = synaptics_rmi4_remove,
-#ifdef CONFIG_HAS_EARLYSUSPEND
 	.suspend = synaptics_rmi4_suspend,
 	.resume = synaptics_rmi4_resume,
-#endif
 	.id_table = synaptics_rmi4_id,
 	.driver = {
 		   .name = "synaptics_3202",

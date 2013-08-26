@@ -68,8 +68,9 @@ struct synaptics_rmi4 {
 	int use_irq;
 	struct hrtimer timer;
 	struct work_struct  work;
+#ifdef CONFIG_HAS_EARLYSUSPEND
 	struct early_suspend early_suspend;
-
+#endif
 	__u8 data_reg;
 	__u8 data_length;
 	__u8 *data;
@@ -107,6 +108,10 @@ struct synaptics_rmi4 {
 	bool wasdown;
 	unsigned int oldX;
 	unsigned int oldY;
+
+#ifndef CONFIG_HAS_EARLYSUSPEND
+	struct notifier_block screen_notifier;
+#endif
 
 };
 
