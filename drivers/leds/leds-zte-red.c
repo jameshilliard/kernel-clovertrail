@@ -185,11 +185,13 @@ static void led_red_late_resume(struct early_suspend *h)
 	    intel_msic_set_red_led(RED_LED_PWM_1S);
 }
 
+#ifdef CONFIG_HAS_EARLYSUSPEND
 static struct early_suspend led_red_suspend_desc = {
 	.level   = EARLY_SUSPEND_LEVEL_DISABLE_FB,
 	.suspend = led_red_early_suspend,
 	.resume  = led_red_late_resume,
 };
+#endif
 
 static void led_red_set(struct led_classdev *led_cdev,
 	enum led_brightness value)
@@ -252,8 +254,9 @@ static int __init led_red_init(void)
         return ret;
     }
 
+#ifdef CONFIG_HAS_EARLYSUSPEND
     register_early_suspend(&led_red_suspend_desc);
-
+#endif
 	return ret;
 }
 module_init(led_red_init);
@@ -261,8 +264,9 @@ module_init(led_red_init);
 static void __exit led_red_exit(void)
 {
     unregister_reboot_notifier(&led_red_notifier);	
+#ifdef CONFIG_HAS_EARLYSUSPEND
     unregister_early_suspend(&led_red_suspend_desc);
-
+#endif
     led_classdev_unregister(&led_red);
 }
 module_exit(led_red_exit);

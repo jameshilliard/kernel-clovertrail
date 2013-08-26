@@ -44,11 +44,9 @@
 #endif
 #include <linux/atomic.h>
 
-#define SUPPORT_EARLY_SUSPEND 1
-
-#if SUPPORT_EARLY_SUSPEND
+#ifdef CONFIG_HAS_EARLYSUSPEND
 #include <linux/earlysuspend.h>
-#endif /* if SUPPORT_EARLY_SUSPEND */
+#endif
 
 #include <asm/intel_scu_pmic.h>
 #include <linux/mutex.h>
@@ -91,7 +89,7 @@ void release_ospm_lock(void)
 	mutex_unlock(&g_ospm_mutex);
 }
 
-#if SUPPORT_EARLY_SUSPEND
+#ifdef CONFIG_HAS_EARLYSUSPEND
 /*
  * gfx_early_suspend
  *
@@ -104,7 +102,7 @@ static struct early_suspend gfx_early_suspend_desc = {
 	.suspend = gfx_early_suspend,
 	.resume = gfx_late_resume,
 };
-#endif /* if SUPPORT_EARLY_SUSPEND */
+#endif
 
 static int ospm_runtime_pm_msvdx_suspend(struct drm_device *dev)
 {
@@ -426,9 +424,9 @@ void ospm_power_init(struct drm_device *dev)
 	atomic_set(&g_videodec_access_count, 0);
 	wake_lock_init(&psb_wake_lock, WAKE_LOCK_SUSPEND, "psb_wakelock");
 
-#if SUPPORT_EARLY_SUSPEND
+#ifdef CONFIG_HAS_EARLYSUSPEND
 	register_early_suspend(&gfx_early_suspend_desc);
-#endif /* if SUPPORT_EARLY_SUSPEND */
+#endif
 
 #ifdef OSPM_STAT
 	dev_priv->graphics_state = PSB_PWR_STATE_ON;
@@ -445,9 +443,9 @@ void ospm_power_init(struct drm_device *dev)
  */
 void ospm_power_uninit(void)
 {
-#if SUPPORT_EARLY_SUSPEND
+#ifdef CONFIG_HAS_EARLYSUSPEND
     unregister_early_suspend(&gfx_early_suspend_desc);
-#endif /* if SUPPORT_EARLY_SUSPEND */
+#endif
     mutex_destroy(&g_ospm_mutex);
 	wake_lock_destroy(&psb_wake_lock);
 #ifdef CONFIG_GFX_RTPM
@@ -1086,7 +1084,7 @@ static bool ospm_resume_pci(struct pci_dev *pdev)
 	return !gbSuspended;
 }
 
-#if SUPPORT_EARLY_SUSPEND
+#ifdef CONFIG_HAS_EARLYSUSPEND
 static void gfx_early_suspend(struct early_suspend *h)
 {
 	struct drm_psb_private *dev_priv = gpDrmDevice->dev_private;
@@ -1131,9 +1129,9 @@ static void gfx_early_suspend(struct early_suspend *h)
 	pm_runtime_allow(&gpDrmDevice->pdev->dev);
 #endif
 }
-#endif /* if SUPPORT_EARLY_SUSPEND */
+#endif
 
-#if SUPPORT_EARLY_SUSPEND
+#ifdef CONFIG_HAS_EARLYSUSPEND
 static void gfx_late_resume(struct early_suspend *h)
 {
 	struct drm_psb_private *dev_priv = gpDrmDevice->dev_private;
@@ -1179,7 +1177,7 @@ static void gfx_late_resume(struct early_suspend *h)
 
 	mutex_unlock(&dev->mode_config.mutex);
 }
-#endif /* if SUPPORT_EARLY_SUSPEND */
+#endif
 
 /*
  * ospm_power_suspend

@@ -99,11 +99,13 @@ static void intel_kpd_led_late_resume(struct early_suspend *h)
 	led_classdev_resume(&intel_kpd_led);
 }
 
+#ifdef CONFIG_HAS_EARLYSUSPEND
 static struct early_suspend intel_kpd_led_suspend_desc = {
 	.level   = EARLY_SUSPEND_LEVEL_BLANK_SCREEN,
 	.suspend = intel_kpd_led_early_suspend,
 	.resume  = intel_kpd_led_late_resume,
 };
+#endif
 
 static int intel_kpd_led_rpmsg_probe(struct rpmsg_channel *rpdev)
 {
@@ -120,15 +122,18 @@ static int intel_kpd_led_rpmsg_probe(struct rpmsg_channel *rpdev)
     intel_keypad_led_init(&intel_kpd_led);
     #endif
 	intel_keypad_led_set(&intel_kpd_led, intel_kpd_led.brightness);
+#ifdef CONFIG_HAS_EARLYSUSPEND
 	register_early_suspend(&intel_kpd_led_suspend_desc);
-
+#endif
 	return 0;
 }
 
 static void intel_kpd_led_rpmsg_remove(struct rpmsg_channel *rpdev)
 {
 	intel_keypad_led_set(&intel_kpd_led, LED_OFF);
+#ifdef CONFIG_HAS_EARLYSUSPEND
 	unregister_early_suspend(&intel_kpd_led_suspend_desc);
+#endif
 	led_classdev_unregister(&intel_kpd_led);
 }
 
