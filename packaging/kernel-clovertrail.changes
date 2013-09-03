@@ -1,3 +1,7 @@
+* Tue Sep 03 2013 Heikki Krogerus <heikki.krogerus@linux.intel.com>
+- Fix TZSP-7497
+  * Adding Smack support
+
 * Tue Aug 22 2013 Austin Zhang <austin.zhang@intel.com>
 - Added package folder/files for redhookbay kernel
 - Fixed compiling issue with Tizen's old gcc
