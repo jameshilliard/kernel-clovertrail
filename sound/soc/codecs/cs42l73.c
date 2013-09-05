@@ -21,6 +21,7 @@
 #include <linux/i2c.h>
 #include <linux/regmap.h>
 #include <linux/slab.h>
+#include <linux/jack.h>
 #include <sound/core.h>
 #include <sound/pcm.h>
 #include <sound/pcm_params.h>
@@ -37,6 +38,11 @@
 static int pdn_delay = 200;
 module_param(pdn_delay, int, 0);
 MODULE_PARM_DESC(pdn_delay, "Codec PDN settling time (msecs)");
+
+#ifdef CONFIG_JACK_MON
+#define JACK_UEVENT_NAME        "earjack"
+#define SND_JACK_NONE           0x00
+#endif
 
 struct sp_config {
 	u8 spc, mmcc, spfs;
@@ -1437,6 +1443,8 @@ int cs42l73_hp_detection(struct snd_soc_codec *codec,
 #endif
 	pr_err("Plug Status = %x\n", plug_status);
 	pr_err("Jack Status = %x\n", status);
+	pr_err("Jack detected, write earjack_online");
+	jack_event_handler(JACK_UEVENT_NAME, status);
 	return status;
 
 }
