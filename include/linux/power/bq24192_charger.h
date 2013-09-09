@@ -32,6 +32,11 @@
 #define USER_SET_CHRG_LMT3	3
 #define USER_SET_CHRG_NOLMT	4
 
+#define BQ24192_CHRG_CUR_LOW		100	/* 100mA */
+#define BQ24192_CHRG_CUR_MEDIUM		500	/* 500mA */
+#define BQ24192_CHRG_CUR_HIGH		900	/* 900mA */
+#define BQ24192_CHRG_CUR_NOLIMIT	1500	/* 1500mA */
+
 #define INPUT_CHRG_CURR_0	0
 #define INPUT_CHRG_CURR_100	100
 #define INPUT_CHRG_CURR_500	500
@@ -119,6 +124,8 @@ struct bq24192_platform_data {
 	struct ctp_temp_mon_table temp_mon_range[CLT_SFI_TEMP_NR_RNG];
 	short int temp_low_lim;
 	bool sfi_tabl_present;
+	struct power_supply_throttle *throttle_states;
+	size_t num_throttle_states;
 };
 
 int bq24192_slave_mode_enable_charging(int volt, int cur, int ilim);

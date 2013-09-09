@@ -214,11 +214,6 @@
 #define BQ24192_DEF_CHRG_CUR		1500
 #endif
 
-#define BQ24192_CHRG_CUR_LOW		100	/* 100mA */
-#define BQ24192_CHRG_CUR_MEDIUM		500	/* 500mA */
-#define BQ24192_CHRG_CUR_HIGH		900	/* 900mA */
-#define BQ24192_CHRG_CUR_NOLIMIT	1500	/* 1500mA */
-
 #define STATUS_UPDATE_INTERVAL		(HZ * 60)	/* 60sec */
 
 #ifdef CONFIG_PROJECT_V975
@@ -2844,19 +2839,27 @@ static int bq24192_get_property(struct power_supply *psy,
 						 struct bq24192_chip, charger);
 
 	mutex_lock(&chip->event_lock);
-	if (psp == POWER_SUPPLY_PROP_ONLINE) {
+	if (psp == POWER_SUPPLY_PROP_ONLINE ||
+	    psp == POWER_SUPPLY_PROP_PRESENT) {
 #ifdef CONFIG_PROJECT_V975
 		val->intval = (chip->usb_online || chip->ac_online
 			       || chip->wireless_online);
 #else
 		val->intval = (chip->usb_online || chip->ac_online);
 #endif
-		mutex_unlock(&chip->event_lock);
-	} else {
+
+	} else if (psp == POWER_SUPPLY_PROP_CHARGE_CONTROL_LIMIT)
+		val->intval = chip->chrg_cur_cntl;
+	else if (psp == POWER_SUPPLY_PROP_ENABLE_CHARGING)
+		val->intval = charger_do_charging;
+	else if (psp == POWER_SUPPLY_PROP_HEALTH)
+		val->intval = chip->batt_health;
+	else {
 		mutex_unlock(&chip->event_lock);
 		return -EINVAL;
 	}
 
+	mutex_unlock(&chip->event_lock);
 	return 0;
 }
 
@@ -3152,13 +3155,13 @@ static int bq24192_probe(struct i2c_client *client,
 	/* Initialize the wakelock */
 	wake_lock_init(&chip->wakelock, WAKE_LOCK_SUSPEND,
 		       "ctp_charger_wakelock");
-	chip->chrg_cur_cntl = POWER_SUPPLY_CHARGE_CURRENT_LIMIT_NONE;
+	chip->chrg_cur_cntl = USER_SET_CHRG_NOLMT;
 	chip->batt_status = POWER_SUPPLY_STATUS_DISCHARGING;
 	chip->batt_mode = BATT_CHRG_NONE;
 	chip->batt_health = POWER_SUPPLY_HEALTH_GOOD;
 	chip->curr_volt = BQ24192_INVALID_VOLT;
 	chip->curr_chrg = BQ24192_INVALID_CURR;
-	chip->cached_chrg_cur_cntl = POWER_SUPPLY_CHARGE_CURRENT_LIMIT_NONE;
+	chip->cached_chrg_cur_cntl = USER_SET_CHRG_NOLMT;
 
 	/* register bq24192 usb with power supply subsystem */
 	if (!chip->pdata->slave_mode) {
@@ -3168,6 +3171,8 @@ static int bq24192_probe(struct i2c_client *client,
 		chip->charger.supplied_to = bq24192_power_supplied_to;
 		chip->charger.num_supplicants =
 		    ARRAY_SIZE(bq24192_power_supplied_to);
+		chip->charger.throttle_states = chip->pdata->throttle_states;
+		chip->charger.num_throttle_states = chip->pdata->num_throttle_states;
 		chip->charger.get_property = bq24192_get_property;
 		chip->charger.set_property = bq24192_set_property;
 		chip->charger.property_is_writeable =

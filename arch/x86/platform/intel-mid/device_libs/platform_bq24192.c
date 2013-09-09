@@ -14,9 +14,39 @@
 #include <linux/i2c.h>
 #include <linux/power/bq24192_charger.h>
 #include <linux/lnw_gpio.h>
+#include <linux/power_supply.h>
 #include <asm/intel-mid.h>
 #include <asm/intel_mid_remoteproc.h>
 #include "platform_bq24192.h"
+
+static struct power_supply_throttle bq24192_throttle_states[] = {
+	{
+		/* USER_SET_CHRG_DISABLE */
+		.throttle_action = PSY_THROTTLE_DISABLE_CHARGER,
+	},
+	{
+		/* USER_SET_CHRG_LMT1 */
+		.throttle_action = PSY_THROTTLE_CC_LIMIT,
+		.throttle_val = BQ24192_CHRG_CUR_LOW
+
+	},
+	{
+		/* USER_SET_CHRG_LMT2 */
+		.throttle_action = PSY_THROTTLE_CC_LIMIT,
+		.throttle_val = BQ24192_CHRG_CUR_MEDIUM
+
+	},
+	{
+		/* USER_SET_CHRG_LMT3 */
+		.throttle_action = PSY_THROTTLE_CC_LIMIT,
+		.throttle_val = BQ24192_CHRG_CUR_HIGH
+	},
+	{
+		/* USER_SET_CHRG_NOLMT */
+		.throttle_action = PSY_THROTTLE_CC_LIMIT,
+		.throttle_val = BQ24192_CHRG_CUR_NOLIMIT
+	},
+};
 
 static bool msic_battery_check(void)
 {
@@ -37,6 +67,9 @@ void *bq24192_platform_data(void *info)
 		platform_data.sfi_tabl_present = true;
 	else
 		platform_data.sfi_tabl_present = false;
+
+	platform_data.throttle_states = bq24192_throttle_states;
+	platform_data.num_throttle_states = ARRAY_SIZE(bq24192_throttle_states);
 
 	/* Define the temperature ranges */
 	platform_data.temp_mon_ranges = 4;
