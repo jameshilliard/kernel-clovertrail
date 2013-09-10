@@ -921,6 +921,20 @@ static ssize_t get_charge_current_limit(struct device *device,
 static DEVICE_ATTR(charge_current_limit, S_IRUGO | S_IWUSR,
 		   get_charge_current_limit, set_charge_current_limit);
 
+
+/*****************************************************************************/
+/*
+ * charger online: This section defines sysfs interfaces used
+ * for indicating charger online or not.
+ */
+
+/* Sysfs Entry for indicating charger online or not. */
+static ssize_t get_charger_online(struct device *device,
+					struct device_attribute *attr,
+					char *buf);
+static DEVICE_ATTR(online, S_IRUGO, get_charger_online, NULL);
+
+
 /* map charge current control setting
  * to input current limit value in mA.
  */
@@ -1057,6 +1071,28 @@ static ssize_t get_charge_current_limit(struct device *dev,
 
 	return sprintf(buf, "%lu\n", value);
 }
+
+
+static ssize_t get_charger_online(struct device *dev,
+					struct device_attribute *attr,
+					char *buf)
+{
+	struct bq24192_chip *chip = i2c_get_clientdata(bq24192_client);
+	unsigned long value;
+
+	mutex_lock(&chip->event_lock);
+
+#ifdef CONFIG_PROJECT_V975
+	value = chip->usb_online || chip->ac_online || chip->wireless_online;
+#else
+	value = chip->usb_online || chip->ac_online;
+#endif
+	dev_info(&chip->client->dev, "%s: Charger online: %lu.\n", __func__, value);
+
+	mutex_unlock(&chip->event_lock);
+	return sprintf(buf, "%lu\n", value);
+}
+
 
 /****************************************************************************/
 /*
@@ -3098,6 +3134,13 @@ static int bq24192_probe(struct i2c_client *client,
 		dev_err(&chip->client->dev,
 			"Failed to create sysfs:charge_current_limit\n");
 	}
+	ret = device_create_file(&chip->client->dev,
+				 &dev_attr_online);
+	if (ret) {
+		dev_err(&chip->client->dev,
+			"Failed to create sysfs:online\n");
+	}
+
 #ifdef CONFIG_PROJECT_V975
 	ret = gpio_request(BQ24192_CHRG_WL_GPIO, "CHRG_WL");
 	if (ret) {
@@ -3307,6 +3350,11 @@ static int bq24192_remove(struct i2c_client *client)
 	struct bq24192_chip *chip = i2c_get_clientdata(client);
 
 	bq24192_remove_debugfs(chip);
+	device_remove_file(&chip->client->dev,
+				 &dev_attr_charge_current_limit);
+	device_remove_file(&chip->client->dev,
+				 &dev_attr_online);
+
 	if (!chip->pdata->slave_mode) {
 		power_supply_unregister(&chip->charger);
 		power_supply_unregister(&chip->usb);
