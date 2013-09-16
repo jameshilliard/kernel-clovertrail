@@ -4548,6 +4548,7 @@ int psb_open(struct inode *inode, struct file *filp)
 
 	file_priv = (struct drm_file *) filp->private_data;
 
+#if 0
 	/* In case that the local file priv has created a master,
 	 * which has been referenced, even if it's not authenticated
 	 * (non-root user). */
@@ -4555,6 +4556,7 @@ int psb_open(struct inode *inode, struct file *filp)
 		&& (file_priv->master == file_priv->minor->master)
 		&& (!file_priv->is_master))
 		file_priv->is_master = 1;
+#endif
 
 	dev_priv = psb_priv(file_priv->minor->dev);
 
