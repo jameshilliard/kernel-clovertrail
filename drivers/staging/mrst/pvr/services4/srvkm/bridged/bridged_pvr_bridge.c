@@ -986,9 +986,6 @@ PVRSRVMapDeviceMemoryBW(IMG_UINT32 ui32BridgeID,
 	{
 		PVR_DPF((PVR_DBG_MESSAGE, "using the mem wrap workaround."));
 
-		psSrcKernelMemInfo->sShareMemWorkaround.ui32OrigReqAttribs |=
-			psMapDevMemIN->ui32BridgeFlags;
-
 		/* Ensure we get the same ID for this allocation, such that it
 		   inherits the same physical block.  Rather than add a lot of
 		   plumbing to several APIs, we call into buffer manager directly
