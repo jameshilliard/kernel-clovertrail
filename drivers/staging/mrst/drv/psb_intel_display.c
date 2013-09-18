@@ -1081,10 +1081,12 @@ static int mdfld__intel_pipe_set_base(struct drm_crtc *crtc, int x, int y,
 				       OSPM_UHB_FORCE_POWER_ON))
 		return 0;
 
+#if 0
 	if (pipe == 1)
 		android_hdmi_set_scaling_property(crtc);
 	else
 		mdfld_intel_set_scaling_property(crtc, x, y, pipe);
+#endif
 
 	Start = mode_dev->bo_offset(dev, psbfb);
 	if (psbfb->pvrBO == NULL)
@@ -1093,6 +1095,7 @@ static int mdfld__intel_pipe_set_base(struct drm_crtc *crtc, int x, int y,
 		Size = mode_dev->bo_size(dev, psbfb->pvrBO);
 	Offset = y * crtc->fb->pitches[0] + x * (crtc->fb->bits_per_pixel / 8);
 
+#if 0
 	/* Try to attach/de-attach Plane B to an existing swap chain,
 	 * especially with another frame buffer inserted into GTT. */
 	eError = MRSTLFBChangeSwapChainProperty(&Start, Size, pipe);
@@ -1101,6 +1104,7 @@ static int mdfld__intel_pipe_set_base(struct drm_crtc *crtc, int x, int y,
 		ret = -EINVAL;
 		goto psb_intel_pipe_set_base_exit;
 	}
+#endif
 
 	REG_WRITE(dspstride, crtc->fb->pitches[0]);
 	dspcntr = REG_READ(dspcntr_reg);
