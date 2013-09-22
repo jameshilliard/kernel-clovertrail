@@ -132,6 +132,8 @@ void ospm_runtime_pm_forbid(struct drm_device *dev);
 void acquire_ospm_lock(void);
 void release_ospm_lock(void);
 
+void gfx_dpms_suspend(void);
+void gfx_dpms_resume(void);
 
 /*
  * If vec/ved/gfx are idle, submit a request to execute the subsystem-level

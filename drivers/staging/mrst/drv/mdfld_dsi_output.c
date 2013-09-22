@@ -527,9 +527,10 @@ int screen_notifier_call_chain(unsigned long val, void *v)
 }
 EXPORT_SYMBOL(screen_notifier_call_chain);
 
+#ifdef CONFIG_EARLYSUSPEND
+
 static void mdfld_dsi_connector_dpms(struct drm_connector *connector, int mode)
 {
-	screen_notifier_call_chain((unsigned int)mode, connector);
 	/*first, execute dpms*/
 	drm_helper_connector_dpms(connector, mode);
 
@@ -568,6 +569,40 @@ static void mdfld_dsi_connector_dpms(struct drm_connector *connector, int mode)
 	ospm_power_using_hw_end(OSPM_DISPLAY_ISLAND);
 #endif
 }
+
+#else
+
+static void mdfld_dsi_connector_dpms(struct drm_connector *connector, int mode)
+{
+	struct drm_device *dev = connector->dev;
+	struct drm_psb_private *dev_priv = dev->dev_private;
+	int old_dpms;
+
+	screen_notifier_call_chain((unsigned int)mode, connector);
+
+	if (dev_priv->rpm_enabled) {
+		old_dpms = connector->dpms;
+
+		if (mode == old_dpms)
+			return;
+
+		if ((mode < old_dpms) && (mode == DRM_MODE_DPMS_ON))
+			gfx_dpms_resume();
+
+		if ((mode > old_dpms) && (old_dpms == DRM_MODE_DPMS_ON))
+			gfx_dpms_suspend();
+
+		connector->dpms = mode;
+		return;
+	}
+
+	if ((mode == DRM_MODE_DPMS_ON) && !(dev_priv->rpm_enabled))
+		dev_priv->rpm_enabled = 1;
+
+	drm_helper_connector_dpms(connector, mode);
+}
+
+#endif
 
 static struct drm_encoder * mdfld_dsi_connector_best_encoder(struct drm_connector * connector) 
 {

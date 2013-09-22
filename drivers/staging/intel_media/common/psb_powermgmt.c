@@ -1179,6 +1179,86 @@ static void gfx_late_resume(struct early_suspend *h)
 }
 #endif
 
+void gfx_dpms_suspend(void)
+{
+	struct drm_psb_private *dev_priv = gpDrmDevice->dev_private;
+	struct drm_device *dev = dev_priv->dev;
+	struct drm_encoder *encoder;
+	struct drm_encoder_helper_funcs *enc_funcs;
+
+	if (!(drm_psb_use_cases_control & PSB_SUSPEND_ENABLE))
+		return ;
+
+	PSB_DEBUG_ENTRY("\n");
+
+	dev_priv->b_dsr_enable_status = dev_priv->b_dsr_enable;
+	if (dev_priv->b_dsr_enable) {
+		dev_priv->exit_idle(dev,
+				MDFLD_DSR_2D_3D,
+				NULL,
+				0);
+		dev_priv->b_dsr_enable = false;
+	}
+
+	list_for_each_entry(encoder,
+			&dev->mode_config.encoder_list,
+			head) {
+		enc_funcs = encoder->helper_private;
+		if (!drm_helper_encoder_in_use(encoder))
+			continue;
+		if (enc_funcs && enc_funcs->save)
+			enc_funcs->save(encoder);
+	}
+
+	gbdispstatus = false;
+	dev_priv->early_suspended = true;
+
+#ifdef CONFIG_GFX_RTPM
+	pm_runtime_allow(&gpDrmDevice->pdev->dev);
+#endif
+}
+
+void gfx_dpms_resume(void)
+{
+	struct drm_psb_private *dev_priv = gpDrmDevice->dev_private;
+	struct drm_device *dev = dev_priv->dev;
+	struct drm_encoder *encoder;
+	struct drm_encoder_helper_funcs *enc_funcs;
+
+	if (!(drm_psb_use_cases_control & PSB_SUSPEND_ENABLE))
+		return ;
+
+	PSB_DEBUG_ENTRY("\n");
+
+	dev_priv->early_suspended = false;
+
+#ifdef CONFIG_GFX_RTPM
+	pm_runtime_forbid(&gpDrmDevice->pdev->dev);
+	mutex_lock(&g_ospm_mutex);
+	ospm_resume_pci(gpDrmDevice->pdev);
+	ospm_resume_display(gpDrmDevice->pdev);
+	psb_irq_preinstall_islands(gpDrmDevice, OSPM_DISPLAY_ISLAND);
+	psb_irq_postinstall_islands(gpDrmDevice, OSPM_DISPLAY_ISLAND);
+	mutex_unlock(&g_ospm_mutex);
+#endif
+
+	list_for_each_entry(encoder,
+			&dev->mode_config.encoder_list,
+			head) {
+		enc_funcs = encoder->helper_private;
+		if (!drm_helper_encoder_in_use(encoder))
+			continue;
+		if (enc_funcs && enc_funcs->restore)
+			enc_funcs->restore(encoder);
+	}
+
+	gbdispstatus = true;
+	dev_priv->b_dsr_enable = dev_priv->b_dsr_enable_status;
+
+	if (lastFailedBrightness > 0)
+		psb_set_brightness(NULL);
+}
+
 /*
  * ospm_power_suspend
  *
