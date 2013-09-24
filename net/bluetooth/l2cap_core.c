@@ -2644,6 +2644,18 @@ static inline int l2cap_connect_req(struct l2cap_conn *conn, struct l2cap_cmd_hd
 	struct l2cap_chan *chan = NULL, *pchan;
 	struct sock *parent, *sk = NULL;
 	int result, status = L2CAP_CS_NO_INFO;
+	struct hci_dev *hdev = conn->hcon->hdev;
+	struct hci_conn *hcon = conn->hcon;
+
+	hci_dev_lock(hdev);
+
+	if (test_bit(HCI_MGMT, &hdev->dev_flags) &&
+		!test_and_set_bit(HCI_CONN_MGMT_CONNECTED, &hcon->flags))
+			mgmt_device_connected(hdev, &hcon->dst, hcon->type,
+				hcon->dst_type, 0, NULL, 0,
+				hcon->dev_class);
+
+	hci_dev_unlock(hdev);
 
 	u16 dcid = 0, scid = __le16_to_cpu(req->scid);
 	__le16 psm = req->psm;
