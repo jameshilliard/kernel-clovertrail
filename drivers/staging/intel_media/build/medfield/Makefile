@@ -60,7 +60,7 @@ ENVDIR = ../../../mrst/pvr/services4/srvkm/env/linux
 COMMONDIR = ../../../mrst/pvr/services4/srvkm/common
 BRIDGEDDIR = ../../../mrst/pvr/services4/srvkm/bridged
 SGXDIR = ../../../mrst/pvr/services4/srvkm/devices/sgx
-FBDEVDIR = ../../../mrst/pvr/services4/3rdparty/linux_framebuffer_drm
+FBDEVDIR = ../../../mrst/pvr/services4/3rdparty/linux_framebuffer_mrst
 DISPLAYDIR = ../../../mrst/drv
 SYSCONFIGDIR = ../../../mrst/pvr/services4/system/intel_drm
 VIDEO_COMMON_DIR = ../../video/common
@@ -115,8 +115,11 @@ sgx-objs += $(ENVDIR)/osfunc.o \
 		$(SGXDIR)/mmu.o \
 		$(SGXDIR)/pb.o
 
-gfx-y += $(FBDEVDIR)/drmlfb_displayclass.o \
-		$(FBDEVDIR)/drmlfb_linux.o
+gfx-y += $(FBDEVDIR)/mrstlfb_displayclass.o \
+		$(FBDEVDIR)/mrstlfb_linux.o
+
+#gfx-y += $(FBDEVDIR)/drmlfb_displayclass.o \
+#		$(FBDEVDIR)/drmlfb_linux.o
 
 gfx-y += $(MEDIA_COMMON_DIR)/psb_drv.o \
 		$(MEDIA_COMMON_DIR)/psb_powermgmt.o \
