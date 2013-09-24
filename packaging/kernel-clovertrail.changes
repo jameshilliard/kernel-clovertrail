@@ -1,3 +1,12 @@
+* Tue Sep 24 2013 Li Peng <peng.li@intel.com>
+- gfx: PM control through dpms interface
+- config: backlight control support
+- config: Disable ANDROID_PARANOID_NETWORK
+- gfx: Don't change scale property and swapchain property in mode setting
+- gfx: Fix wrong attribute in device memory map
+- gfx: Fix DRI2 authenticate failure
+- gfx: Enable build config SUPPORT_PVRSRV_GET_DC_SYSTEM_BUFFER
+
 * Tue Sep 03 2013 Heikki Krogerus <heikki.krogerus@linux.intel.com>
 - Fix TZSP-7497
   * Adding Smack support
