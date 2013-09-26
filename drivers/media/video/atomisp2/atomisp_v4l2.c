@@ -43,13 +43,15 @@
 #include <linux/intel_mid_pm.h>
 #include <asm/intel-mid.h>
 
+#define RESERVED_MEMORY_POOL_SIZE_IN_PAGE 18432
+
 /* set reserved memory pool size in page */
-unsigned int repool_pgnr;
+unsigned int repool_pgnr = RESERVED_MEMORY_POOL_SIZE_IN_PAGE;
 module_param(repool_pgnr, uint, 0644);
 MODULE_PARM_DESC(repool_pgnr,
 		"Set the reserved memory pool size in page (default:0)");
 
-bool dypool_enable;
+bool dypool_enable = true;
 module_param(dypool_enable, bool, 0644);
 MODULE_PARM_DESC(dypool_enable,
 		"dynamic memory pool enable/disable (default:disable)");
