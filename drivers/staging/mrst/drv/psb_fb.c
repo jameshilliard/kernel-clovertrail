@@ -788,7 +788,6 @@ static struct fb_ops psbfb_ops = {
 	.fb_fillrect = psb_cfb_fillrect,
 	.fb_copyarea = psb_cfb_copyarea,
 	.fb_imageblit = psb_cfb_imageblit,
-	.fb_mmap = psbfb_mmap,
 };
 
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,35))
