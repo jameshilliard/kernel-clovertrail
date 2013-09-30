@@ -1,3 +1,6 @@
+* Mon Sep 30 2013 Heikki Krogerus <heikki.krogerus@linux.intel.com>
+- atomisp chagnes
+
 * Tue Sep 24 2013 Li Peng <peng.li@intel.com>
 - gfx: PM control through dpms interface
 - config: backlight control support
