@@ -93,7 +93,7 @@ int drm_psb_te_timer_delay = (DRM_HZ / 40);
 char HDMI_EDID[HDMI_MONITOR_NAME_LENGTH];
 int hdmi_state;
 u32 DISP_PLANEB_STATUS = ~DISPLAY_PLANE_ENABLE;
-int drm_psb_use_cases_control = PSB_ALL_UC_ENABLE;
+int drm_psb_use_cases_control = (PSB_ALL_UC_ENABLE & ~PSB_DSR_ENABLE);
 int drm_psb_dump_pm_history;
 int gamma_setting[129] = {0};
 int csc_setting[6] = {0};
