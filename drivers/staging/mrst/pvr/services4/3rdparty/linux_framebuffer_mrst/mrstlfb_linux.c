@@ -46,6 +46,7 @@
 
 #include "psb_drv.h"
 
+#include "mdfld_dsi_dbi_dsr.h"
 #include "mdfld_dsi_dbi.h"
 #include "mdfld_dsi_dbi_dpu.h"
 
@@ -151,6 +152,10 @@ void MRSTLFBFlipToSurface(MRSTLFB_DEVINFO *psDevInfo,  unsigned long uiAddr)
 {
 	int dspbase = (psDevInfo->ui32MainPipe == 0 ? MRST_DSPABASE : MRST_DSPBBASE);
 	int dspsurf = (psDevInfo->ui32MainPipe == 0 ? DSPASURF : DSPBSURF);
+	struct drm_device * dev = psDevInfo->psDrmDevice;
+	struct drm_psb_private *dev_priv = (struct drm_psb_private *) psDevInfo->psDrmDevice->dev_private;
+	struct mdfld_dsi_config *dsi_config;
+	struct mdfld_dsi_hw_context *ctx;
 
 	//This is copied from framebuffer_drm, the atomic check appears to be missing
 //	if (in_atomic() ? ospm_power_using_hw_begin_atomic(OSPM_DISPLAY_ISLAND) : ospm_power_using_hw_begin(OSPM_DISPLAY_ISLAND, true))
@@ -176,6 +181,15 @@ void MRSTLFBFlipToSurface(MRSTLFB_DEVINFO *psDevInfo,  unsigned long uiAddr)
 		MRSTLFBVSyncWriteReg(psDevInfo, dspsurf, uiAddr);
 		ospm_power_using_hw_end(OSPM_DISPLAY_ISLAND);
 	}
+
+
+	dsi_config = dev_priv->dsi_configs[0];
+	if (dsi_config) {
+		ctx = &dsi_config->dsi_hw_context;
+		ctx->dspsurf = uiAddr;
+	}
+
+	mdfld_dsi_dsr_update_panel_fb(dsi_config);
 }
 
 

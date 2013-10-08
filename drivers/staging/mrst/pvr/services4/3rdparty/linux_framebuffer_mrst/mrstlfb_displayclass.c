@@ -1159,6 +1159,8 @@ static IMG_BOOL ProcessFlip(IMG_HANDLE  hCmdCookie,
 	MRSTLFB_VSYNC_FLIP_ITEM* psFlipItem;
 #endif
 	unsigned long ulLockFlags;
+	struct drm_device *dev;
+	struct drm_psb_private *dev_priv;
 
 
 	if(!hCmdCookie || !pvData)
@@ -1176,9 +1178,18 @@ static IMG_BOOL ProcessFlip(IMG_HANDLE  hCmdCookie,
 
 
 	psDevInfo = (MRSTLFB_DEVINFO*)psFlipCmd->hExtDevice;
+	dev = psDevInfo->psDrmDevice;
+	dev_priv = (struct drm_psb_private *) psDevInfo->psDrmDevice->dev_private;
 
 	psBuffer = (MRSTLFB_BUFFER*)psFlipCmd->hExtBuffer;
 	psSwapChain = (MRSTLFB_SWAPCHAIN*) psFlipCmd->hExtSwapChain;
+
+	if (!dev_priv->um_start) {
+		dev_priv->um_start = true;
+		dev_priv->b_async_flip_enable = true;
+		if (dev_priv->b_dsr_enable_config)
+			dev_priv->b_dsr_enable = true;
+	}
 
 	spin_lock_irqsave(&psDevInfo->sSwapChainLock, ulLockFlags);
 
