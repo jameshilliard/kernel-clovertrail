@@ -1,3 +1,8 @@
+* Wed Oct 09 2013 Li Peng <peng.li@intel.com> submit/tizen_2.2_stable/20130930.063917@d520e62
+- gfx: forbid DSR during pageflip
+- gfx: Disable DSR until it is ready
+- gfx: enable async flip
+
 * Mon Sep 30 2013 Heikki Krogerus <heikki.krogerus@linux.intel.com>
 - atomisp chagnes
 
