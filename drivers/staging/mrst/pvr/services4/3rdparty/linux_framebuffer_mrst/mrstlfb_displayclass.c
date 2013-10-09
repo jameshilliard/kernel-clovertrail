@@ -43,6 +43,8 @@
 #include "psb_drv.h"
 #include "psb_powermgmt.h"
 
+#include "mdfld_dsi_dbi_dsr.h"
+
 #if !defined(SUPPORT_DRI_DRM)
 #error "SUPPORT_DRI_DRM must be set"
 #endif
@@ -1161,6 +1163,8 @@ static IMG_BOOL ProcessFlip(IMG_HANDLE  hCmdCookie,
 	unsigned long ulLockFlags;
 	struct drm_device *dev;
 	struct drm_psb_private *dev_priv;
+	struct mdfld_dsi_config *dsi_config;
+	int contextlocked;
 
 
 	if(!hCmdCookie || !pvData)
@@ -1190,6 +1194,17 @@ static IMG_BOOL ProcessFlip(IMG_HANDLE  hCmdCookie,
 		if (dev_priv->b_dsr_enable_config)
 			dev_priv->b_dsr_enable = true;
 	}
+
+	dsi_config = dev_priv->dsi_configs[0];
+
+	contextlocked = mutex_trylock(&dsi_config->context_lock);
+	if (!contextlocked) {
+		mutex_lock(&dsi_config->context_lock);
+		contextlocked = 1;
+	}
+
+	if (contextlocked)
+		mdfld_dsi_dsr_forbid_locked(dsi_config);
 
 	spin_lock_irqsave(&psDevInfo->sSwapChainLock, ulLockFlags);
 
@@ -1242,10 +1257,18 @@ static IMG_BOOL ProcessFlip(IMG_HANDLE  hCmdCookie,
 	}
 	
 	spin_unlock_irqrestore(&psDevInfo->sSwapChainLock, ulLockFlags);
+	if (contextlocked) {
+		mdfld_dsi_dsr_allow_locked(dsi_config);
+		mutex_unlock(&dsi_config->context_lock);
+	}
 	return IMG_FALSE;
 
 ExitTrueUnlock:
 #endif
+	if (contextlocked) {
+		mdfld_dsi_dsr_allow_locked(dsi_config);
+		mutex_unlock(&dsi_config->context_lock);
+	}
 	spin_unlock_irqrestore(&psDevInfo->sSwapChainLock, ulLockFlags);
 	return IMG_TRUE;
 }
