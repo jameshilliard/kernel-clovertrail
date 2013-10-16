@@ -657,5 +657,7 @@ struct ov9740_device {
 	char name[32];
 
 	u8 lightfreq;
+	unsigned int flag_vflip;
+	unsigned int flag_hflip;
 };
 

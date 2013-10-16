@@ -115,6 +115,31 @@ static int ov9740_reg_write_array(struct i2c_client *client,
 	return 0;
 }
 
+static int ov9740_reg_rmw(struct i2c_client *client, u16 reg, u8 set, u8 unset)
+{
+	u8 val;
+	int ret;
+
+	ret = ov9740_read(client, reg, &val);
+	if (ret < 0) {
+		dev_err(&client->dev,
+			"[Read]-Modify-Write of register %02x failed!\n", reg);
+		return ret;
+	}
+
+	val |= set;
+	val &= ~unset;
+
+	ret = ov9740_reg_write(client, reg, val);
+	if (ret < 0) {
+		dev_err(&client->dev,
+			"Read-Modify-[Write] of register %02x failed!\n", reg);
+		return ret;
+	}
+
+	return 0;
+}
+
 
 static int ov9740_init_common(struct v4l2_subdev *sd)
 {
@@ -393,29 +418,18 @@ static int ov9740_set_mbus_fmt(struct v4l2_subdev *sd,
 /* Horizontal flip the image. */
 static int ov9740_g_hflip(struct v4l2_subdev *sd, s32 * val)
 {
-	/*struct i2c_client *c = v4l2_get_subdevdata(sd);
-	int ret;
-	u32 data;
-	ret = mt9m114_read_reg(c, MISENSOR_16BIT,
-			(u32)MISENSOR_READ_MODE, &data);
-	if (ret)
-		return ret;
-	*val = !!(data & MISENSOR_HFLIP_MASK);*/
+	struct ov9740_device *dev = to_ov9740_sensor(sd);
+
+	*val = dev->flag_hflip;
 
 	return 0;
 }
 
 static int ov9740_g_vflip(struct v4l2_subdev *sd, s32 * val)
 {
-	/*struct i2c_client *c = v4l2_get_subdevdata(sd);
-	int ret;
-	u32 data;
+	struct ov9740_device *dev = to_ov9740_sensor(sd);
 
-	ret = mt9m114_read_reg(c, MISENSOR_16BIT,
-			(u32)MISENSOR_READ_MODE, &data);
-	if (ret)
-		return ret;
-	*val = !!(data & MISENSOR_VFLIP_MASK);*/
+	*val = dev->flag_hflip;
 
 	return 0;
 }
@@ -664,81 +678,42 @@ static int ov9740_queryctrl(struct v4l2_subdev *sd, struct v4l2_queryctrl *qc)
 /* Horizontal flip the image. */
 static int ov9740_t_hflip(struct v4l2_subdev *sd, int value)
 {
- #if 0
-	struct i2c_client *c = v4l2_get_subdevdata(sd);
-	struct mt9m114_device *dev = to_mt9m114_sensor(sd);
-	int err;
-	/* set for direct mode */
-	err = mt9m114_write_reg(c, MISENSOR_16BIT, 0x098E, 0xC850);
+	struct ov9740_device *dev = to_ov9740_sensor(sd);
+	struct i2c_client *client = v4l2_get_subdevdata(sd);
+	int ret;
+
 	if (value) {
-		/* enable H flip ctx A */
-		err += misensor_rmw_reg(c, MISENSOR_8BIT, 0xC850, 0x01, 0x01);
-		err += misensor_rmw_reg(c, MISENSOR_8BIT, 0xC851, 0x01, 0x01);
-		/* ctx B */
-		err += misensor_rmw_reg(c, MISENSOR_8BIT, 0xC888, 0x01, 0x01);
-		err += misensor_rmw_reg(c, MISENSOR_8BIT, 0xC889, 0x01, 0x01);
-
-		err += misensor_rmw_reg(c, MISENSOR_16BIT, MISENSOR_READ_MODE,
-					MISENSOR_HFLIP_MASK, MISENSOR_FLIP_EN);
-
-		dev->bpat = MT9M114_BPAT_GRGRBGBG;
+		dev->flag_hflip = 1;
+		ret = ov9740_reg_rmw(client, OV9740_IMAGE_ORT, 0x1, 0);
 	} else {
-		/* disable H flip ctx A */
-		err += misensor_rmw_reg(c, MISENSOR_8BIT, 0xC850, 0x01, 0x00);
-		err += misensor_rmw_reg(c, MISENSOR_8BIT, 0xC851, 0x01, 0x00);
-		/* ctx B */
-		err += misensor_rmw_reg(c, MISENSOR_8BIT, 0xC888, 0x01, 0x00);
-		err += misensor_rmw_reg(c, MISENSOR_8BIT, 0xC889, 0x01, 0x00);
-
-		err += misensor_rmw_reg(c, MISENSOR_16BIT, MISENSOR_READ_MODE,
-					MISENSOR_HFLIP_MASK, MISENSOR_FLIP_DIS);
-
-		dev->bpat = MT9M114_BPAT_BGBGGRGR;
+		dev->flag_hflip = 0;
+		ret = ov9740_reg_rmw(client, OV9740_IMAGE_ORT, 0, 0x1);
 	}
 
-	err += mt9m114_write_reg(c, MISENSOR_8BIT, 0x8404, 0x06);
-	udelay(10);
+	if (ret < 0)
+		return ret;
 
-	return !!err;
-	#endif
 	return 0;
 }
 
 /* Vertically flip the image */
 static int ov9740_t_vflip(struct v4l2_subdev *sd, int value)
 {
-     #if 0
-	struct i2c_client *c = v4l2_get_subdevdata(sd);
-	int err;
-	/* set for direct mode */
-	err = mt9m114_write_reg(c, MISENSOR_16BIT, 0x098E, 0xC850);
-	if (value >= 1) {
-		/* enable H flip - ctx A */
-		err += misensor_rmw_reg(c, MISENSOR_8BIT, 0xC850, 0x02, 0x01);
-		err += misensor_rmw_reg(c, MISENSOR_8BIT, 0xC851, 0x02, 0x01);
-		/* ctx B */
-		err += misensor_rmw_reg(c, MISENSOR_8BIT, 0xC888, 0x02, 0x01);
-		err += misensor_rmw_reg(c, MISENSOR_8BIT, 0xC889, 0x02, 0x01);
+	struct ov9740_device *dev = to_ov9740_sensor(sd);
+	struct i2c_client *client = v4l2_get_subdevdata(sd);
+	int ret;
 
-		err += misensor_rmw_reg(c, MISENSOR_16BIT, MISENSOR_READ_MODE,
-					MISENSOR_VFLIP_MASK, MISENSOR_FLIP_EN);
+	if (value) {
+		dev->flag_vflip = 1;
+		ret = ov9740_reg_rmw(client, OV9740_IMAGE_ORT, 0x2, 0);
 	} else {
-		/* disable H flip - ctx A */
-		err += misensor_rmw_reg(c, MISENSOR_8BIT, 0xC850, 0x02, 0x00);
-		err += misensor_rmw_reg(c, MISENSOR_8BIT, 0xC851, 0x02, 0x00);
-		/* ctx B */
-		err += misensor_rmw_reg(c, MISENSOR_8BIT, 0xC888, 0x02, 0x00);
-		err += misensor_rmw_reg(c, MISENSOR_8BIT, 0xC889, 0x02, 0x00);
-
-		err += misensor_rmw_reg(c, MISENSOR_16BIT, MISENSOR_READ_MODE,
-					MISENSOR_VFLIP_MASK, MISENSOR_FLIP_DIS);
+		dev->flag_vflip = 0;
+		ret = ov9740_reg_rmw(client, OV9740_IMAGE_ORT, 0, 0x2);
 	}
 
-	err += mt9m114_write_reg(c, MISENSOR_8BIT, 0x8404, 0x06);
-	udelay(10);
+	if (ret < 0)
+		return ret;
 
-	return !!err;
-	#endif
 	return 0;
 }
 
