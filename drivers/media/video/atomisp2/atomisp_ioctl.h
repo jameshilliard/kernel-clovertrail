@@ -36,6 +36,7 @@ const struct atomisp_format_bridge *atomisp_get_format_bridge(
 const struct atomisp_format_bridge *atomisp_get_format_bridge_from_mbus(
 	enum v4l2_mbus_pixelcode mbus_code);
 
+int is_pixelformat_raw(u32 pixelformat);
 int atomisp_alloc_css_stat_bufs(struct atomisp_device *isp);
 
 int __atomisp_streamoff(struct file *file, void *fh, enum v4l2_buf_type type);
