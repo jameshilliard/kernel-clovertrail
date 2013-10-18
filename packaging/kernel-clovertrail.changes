@@ -1,3 +1,8 @@
+* Fri Oct 18 2013 Li Peng <peng.li@intel.com>
+- gfx: enable DSR
+- Revert "Revert "gfx/fb: another work around to enable X with frame buffer""
+- Revert "Revert "gfx/fb: work around to enable X with frame buffer""
+
 * Wed Oct 09 2013 Li Peng <peng.li@intel.com> submit/tizen_2.2_stable/20130930.063917@d520e62
 - gfx: forbid DSR during pageflip
 - gfx: Disable DSR until it is ready
