@@ -39,6 +39,7 @@
     
 	unsigned int poll_inerval;	
 	unsigned int g_range;
+	struct notifier_block screen_notifier;
 };
 
 struct accel_driver_descr {

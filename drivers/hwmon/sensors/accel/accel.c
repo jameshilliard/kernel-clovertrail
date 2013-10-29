@@ -26,6 +26,7 @@
 #include <linux/delay.h>
 #include <linux/suspend.h>
 #include <linux/module.h>
+#include <drm/drm_mode.h>
 
 #define ACCEL_DEFUALT_ADDR 0x0F //kxtf9
 
@@ -55,6 +56,11 @@ struct accel_data{
 
 atomic_t suspend_enabled;
 struct accel_data *g_accel_driver_data = NULL;
+
+static int accel_screen_notifier_callback(struct notifier_block *self,
+				unsigned long event_type, void *nt_data);
+extern int screen_register_receiver(struct notifier_block *nb);
+extern int screen_unregister_receiver(struct notifier_block *nb);
 
 #define RW_RETRIES 5
 
@@ -509,6 +515,24 @@ static struct notifier_block accel_i2c_notify = {
 	.notifier_call = accel_pm_notify,
 };
 
+
+static int accel_screen_notifier_callback(struct notifier_block *self,
+				unsigned long event_type, void *nt_data)
+{
+	switch (event_type) {
+	case DRM_MODE_DPMS_OFF:
+		if (atomic_read(&suspend_enabled))
+			accel_disable();
+		break;
+	case DRM_MODE_DPMS_ON:
+		if (atomic_read(&suspend_enabled))
+			accel_enable();
+		break;
+	}
+
+	return NOTIFY_OK;
+}
+
 int accel_i2c_probe(struct i2c_client *clientp, const struct i2c_device_id *dev_id){
     int ret;
     
@@ -737,7 +761,10 @@ static int __devinit accel_probe(struct platform_device *pdev)
         ret = -ENXIO;
         goto mem_failed;
     }
-    
+
+	pdata->screen_notifier.notifier_call = accel_screen_notifier_callback;
+	screen_register_receiver(&pdata->screen_notifier);
+
     return 0;
 mem_failed:
     kfree(g_accel_driver_data);
@@ -747,6 +774,12 @@ failed:
 
 static int accel_remove(struct platform_device *pdev)
 {
+	struct accel_platform_data *pdata;
+
+	pdata = pdev->dev.platform_data;
+	if (&pdata->screen_notifier != NULL)
+		screen_unregister_receiver(&pdata->screen_notifier);
+
     i2c_del_driver(&accel_i2c_driver);
     kfree(g_accel_driver_data);
     return 0;
