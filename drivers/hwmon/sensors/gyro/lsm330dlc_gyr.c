@@ -51,6 +51,7 @@
 #include <linux/slab.h>
 #include <linux/moduleparam.h>
 #include <linux/module.h>
+#include <drm/drm_mode.h>
 
 /** Maximum polled-device-reported rot speed value value in dps*/
 #define FS_MAX			32768
@@ -224,8 +225,14 @@ struct lsm330dlc_data {
 	u8 resume_state[RESUME_ENTRIES];
 
 	bool polling_enabled;
+	struct notifier_block screen_notifier;
 };
 
+static struct lsm330dlc_data *gyro_data;
+static int gyro_screen_notifier_callback(struct notifier_block *self,
+				unsigned long event_type, void *nt_data);
+extern int screen_register_receiver(struct notifier_block *nb);
+extern int screen_unregister_receiver(struct notifier_block *nb);
 
 static int lsm330dlc_i2c_read(struct lsm330dlc_data *gyr, u8 *buf, int len)
 {
@@ -851,6 +858,21 @@ static void lsm330dlc_input_cleanup(struct lsm330dlc_data *gyro)
 	input_free_polled_device(gyro->input_poll_dev);
 }
 
+static int gyro_screen_notifier_callback(struct notifier_block *self,
+				unsigned long event_type, void *nt_data)
+{
+	switch (event_type) {
+	case DRM_MODE_DPMS_OFF:
+		lsm330dlc_disable(gyro_data);
+		break;
+	case DRM_MODE_DPMS_ON:
+		lsm330dlc_enable(gyro_data);
+		break;
+	}
+
+	return NOTIFY_OK;
+}
+
 static int lsm330dlc_probe(struct i2c_client *client,
 					const struct i2c_device_id *devid)
 {
@@ -921,6 +943,11 @@ static int lsm330dlc_probe(struct i2c_client *client,
 	gyro->resume_state[RES_FIFO_CTRL_REG] = ALL_ZEROES;
 
 	gyro->polling_enabled = true;
+
+	gyro_data = gyro;
+	gyro->screen_notifier.notifier_call = gyro_screen_notifier_callback;
+	screen_register_receiver(&gyro->screen_notifier);
+
 	dev_info(&client->dev, "polling enabled\n");
 
 	err = lsm330dlc_device_power_on(gyro);
@@ -990,6 +1017,9 @@ static int lsm330dlc_remove(struct i2c_client *client)
 #if DEBUG
 	pr_info("%s: driver removing\n", LSM330DLC_GYR_DEV_NAME);
 #endif
+
+	if (&gyro->screen_notifier != NULL)
+		screen_unregister_receiver(&gyro->screen_notifier);
 
 	lsm330dlc_disable(gyro);
 	lsm330dlc_input_cleanup(gyro);
