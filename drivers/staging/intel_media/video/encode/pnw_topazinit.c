@@ -1472,6 +1472,9 @@ void pnw_topaz_mmu_hwsetup(struct drm_psb_private *dev_priv, uint32_t core_id)
 			(topaz_priv->frame_h > PSB_TOPAZ_TILING_THRESHOLD))
 		is_src_tiled = true;
 
+	/* FIXME:Currently camsrc did not support tiling mode */
+	is_src_tiled = false;
+
 	if (drm_psb_msvdx_tiling && dev_priv->have_mem_mmu_tiling &&
 		is_src_tiled) {
 		uint32_t tile_start = dev_priv->bdev.man[TTM_PL_TT].gpu_offset;
