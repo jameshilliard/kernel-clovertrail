@@ -1351,7 +1351,7 @@ void mdfld_disable_te(struct drm_device *dev, int pipe)
 		 increased by next te enable*/
 		sender = mdfld_dsi_get_pkg_sender(dsi_config);
 		atomic64_set(&sender->last_screen_update, 0);
-		atomic64_set(&sender->te_seq, 0);
+		atomic64_set(&sender->te_seq, 1);
 		dev_priv->vsync_te_working[pipe] = false;
 		atomic_set(&dev_priv->mipi_flip_abnormal, 0);
 	}
