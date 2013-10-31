@@ -2605,8 +2605,6 @@ static int hsu_runtime_suspend(struct device *dev)
 	struct pci_dev *pdev = container_of(dev, struct pci_dev, dev);
 	struct uart_hsu_port *up = pci_get_drvdata(pdev);
 
-	return -EBUSY;
-
 	if (!allow_for_suspend(up)) {
 		pm_schedule_suspend(dev, 100);
 		return -EBUSY;
