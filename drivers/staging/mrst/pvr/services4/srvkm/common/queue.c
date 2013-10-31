@@ -55,6 +55,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endif
 
 #define DC_NUM_CMDS_COMPLETE_HISTORY  40 /*must be multiple of 4*/
+#define MAX_LOCK_ATTEMPTS 1000
 /*
  * List of private command processing function pointer tables and command
  * complete tables for a device in the system.
@@ -524,15 +525,34 @@ PVRSRV_ERROR IMG_CALLCONV PVRSRVCreateCommandQueueKM(IMG_SIZE_T ui32QueueSize,
 		eError = OSCreateResource(&psSysData->sQProcessResource);
 		if (eError != PVRSRV_OK)
 		{
+			PVR_DPF((PVR_DBG_ERROR,"PVRSRVCreateCommandQueueKM: Failed to create resource"));
 			goto ErrorExit;
 		}
 	}
 
 	/* Ensure we don't corrupt queue list, by blocking access */
-	eError = OSLockResource(&psSysData->sQProcessResource,
-							KERNEL_ID);
+	{
+		int i;
+
+		for(i = 0; i < MAX_LOCK_ATTEMPTS; i++)
+		{
+			eError = OSLockResource(&psSysData->sQProcessResource, KERNEL_ID);
+			if(eError == PVRSRV_OK)
+			{
+				break;
+			}
+			OSWaitus(1000);
+		}
+
+		if(i != MAX_LOCK_ATTEMPTS)
+		{
+			PVR_DPF((PVR_DBG_ERROR,"PVRSRVCreateCommandQueueKM: locked resource in %d/%d attempts", i+1, MAX_LOCK_ATTEMPTS));
+		}
+	}
+
 	if (eError != PVRSRV_OK)
 	{
+		PVR_DPF((PVR_DBG_ERROR,"PVRSRVCreateCommandQueueKM: Failed to lock resource"));
 		goto ErrorExit;
 	}
 
@@ -542,6 +562,7 @@ PVRSRV_ERROR IMG_CALLCONV PVRSRVCreateCommandQueueKM(IMG_SIZE_T ui32QueueSize,
 	eError = OSUnlockResource(&psSysData->sQProcessResource, KERNEL_ID);
 	if (eError != PVRSRV_OK)
 	{
+		PVR_DPF((PVR_DBG_ERROR,"PVRSRVCreateCommandQueueKM: Failed to unlock resource"));
 		goto ErrorExit;
 	}
 
