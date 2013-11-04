@@ -1,3 +1,6 @@
+* Mon Nov 04 2013 Heikki Krogerus <heikki.krogerus@linux.intel.com>
+- Enabling focus driver and perf pkg generating
+
 * Fri Oct 18 2013 Li Peng <peng.li@intel.com>
 - gfx: enable DSR
 - Revert "Revert "gfx/fb: another work around to enable X with frame buffer""
