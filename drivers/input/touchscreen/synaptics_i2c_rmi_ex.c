@@ -39,9 +39,11 @@
 #include <linux/slab.h>
 #include <linux/regulator/consumer.h>	/*ZTE: added by tong.weili for Touch Power 20111116 */
 
+#include <linux/input/mt.h>
 #ifndef CONFIG_HAS_EARLYSUSPEND
 #include <drm/drm_mode.h>
 
+#define MAX_SUPPORT_POINT 10
 static bool touch_status;
 static bool enter_notifier;
 static struct i2c_client *client_noti;
@@ -1039,6 +1041,7 @@ static void synaptics_rmi4_work_func(struct work_struct *work)
 	static u32 interval_time, jiffies_now, jiffies_last;
 	POINT_t points[5];
 #endif
+	static int point_flag[MAX_SUPPORT_POINT] = {0};
 
 	struct synaptics_rmi4 *ts =
 	    container_of(work, struct synaptics_rmi4, work);
@@ -1149,6 +1152,7 @@ static void synaptics_rmi4_work_func(struct work_struct *work)
 
 						if (finger_status ==
 						    f11_finger_accurate) {
+							point_flag[f] = true;
 							u4 wx =
 							    finger_reg[3] %
 							    0x10;
@@ -1212,6 +1216,8 @@ static void synaptics_rmi4_work_func(struct work_struct *work)
 #ifdef CONFIG_SYNA_MULTI_TOUCH
 							/* Report Multi-Touch events for each finger */
 							/* major axis of touch area ellipse */
+							input_mt_slot(ts->input_dev, f);
+							input_mt_report_slot_state(ts->input_dev, MT_TOOL_FINGER, true);
 							input_report_abs(ts->
 									 input_dev,
 									 ABS_MT_PRESSURE,
@@ -1244,6 +1250,11 @@ static void synaptics_rmi4_work_func(struct work_struct *work)
 #endif
 
 						}
+					else if(point_flag[f] == true){
+						input_mt_slot(ts->input_dev, f);
+						input_mt_report_slot_state(ts->input_dev, MT_TOOL_FINGER, false);
+						point_flag[f] = false;
+					}
 #endif
 					}
 				}
@@ -1309,6 +1320,13 @@ static void synaptics_rmi4_work_func(struct work_struct *work)
 				if ((fingerDownCount == 0) && ts->wasdown) {
 					ts->wasdown = false;
 
+					for (f = 0; f < ts->f11.points_supported; ++f ){
+						if (point_flag[f] == true){
+							input_mt_slot(ts->input_dev, f);
+							input_mt_report_slot_state(ts->input_dev, MT_TOOL_FINGER, false);
+							point_flag[f] = false;
+						}
+					}
 #ifdef CONFIG_SYNA_MULTI_TOUCH
 					input_report_abs(ts->input_dev,
 							 ABS_MT_TOUCH_MAJOR, 0);
@@ -1525,6 +1543,7 @@ static int synaptics_rmi4_probe(struct i2c_client *client,
 				     0);
 
 #ifdef CONFIG_SYNA_MULTI_TOUCH
+		input_mt_init_slots(ts->input_dev, MAX_SUPPORT_POINT);
 		input_set_abs_params(ts->input_dev, ABS_MT_TOUCH_MAJOR, 0, 15, 0, 0);	/*pressure of single-touch */
 		input_set_abs_params(ts->input_dev, ABS_MT_TOUCH_MINOR, 0, 15,
 				     0, 0);
