@@ -1,3 +1,9 @@
+* Tue Nov 12 2013 Li Peng <peng.li@intel.com> submit/tizen_2.2_stable/20131107.023010@d3eefea
+- config: no HDMI port on Geek, disable driver config
+- touchscreen: fixed tzsp-7689 (multitouch issue)
+- Fix bugs: TZSP-7837, WIFI strength icon on status bar does not display synchronization with current WIFI strength.
+- gfx: When creating a CmdQueue for a swapchain, keep calling OSLockResource() for a second instead of giving up after the first failure.
+
 * Mon Nov 04 2013 Heikki Krogerus <heikki.krogerus@linux.intel.com>
 - Enabling focus driver and perf pkg generating
 
