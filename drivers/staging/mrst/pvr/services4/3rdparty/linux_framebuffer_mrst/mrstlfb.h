@@ -43,8 +43,8 @@
 #define PSB_INT_MASK_R            0x20A8
 #define PSB_INT_ENABLE_R          0x20A0
 
-#define MAX_SWAPCHAINS			  5
-#define MAX_BUFFERS_PER_SWAPCHAIN	4
+#define MAX_SWAPCHAINS			10
+#define MAX_BUFFERS_PER_SWAPCHAIN	2
 
 /* IPC message and command defines used to enable/disable mipi panel voltages */
 #define	IPC_MSG_PANEL_ON_OFF	0xE9
