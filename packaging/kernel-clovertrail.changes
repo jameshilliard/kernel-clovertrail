@@ -1,3 +1,8 @@
+* Mon Nov 18 2013 Li Peng <peng.li@intel.com> submit/tizen_2.2_stable/20131107.023010@bf75087
+- change max swapchain number to 10 and 2 buffer per chain
+- config: no HDMI port on Geek, disable driver config""
+- Revert "config: no HDMI port on Geek, disable driver config"
+
 * Tue Nov 12 2013 Li Peng <peng.li@intel.com> submit/tizen_2.2_stable/20131107.023010@d3eefea
 - config: no HDMI port on Geek, disable driver config
 - touchscreen: fixed tzsp-7689 (multitouch issue)
