@@ -376,6 +376,7 @@ int atomisp_init_struct(struct atomisp_device *isp)
 	isp->need_gfx_throttle = true;
 	isp->isp_fatal_error = false;
 	isp->delayed_init = ATOMISP_DELAYED_INIT_NOT_QUEUED;
+	isp->streaming = ATOMISP_DEVICE_STREAMING_DISABLED;
 
 	/*
 	 * For Merrifield, frequency is scalable.
@@ -909,4 +910,3 @@ const struct v4l2_file_operations atomisp_file_fops = {
 	.ioctl = video_ioctl2,
 	.poll = atomisp_poll,
 };
-
