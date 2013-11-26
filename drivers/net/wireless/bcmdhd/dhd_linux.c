@@ -119,12 +119,16 @@ extern bool ap_fw_loaded;
 #endif
 
 #include <wl_android.h>
+#include <drm/drm_mode.h>
+extern int screen_register_receiver(struct notifier_block *nb);
+extern int screen_unregister_receiver(struct notifier_block *nb);
 
 #ifdef ARP_OFFLOAD_SUPPORT
 void aoe_update_host_ipv4_table(dhd_pub_t *dhd_pub, u32 ipa, bool add, int idx);
 static int dhd_device_event(struct notifier_block *this,
 	unsigned long event,
 	void *ptr);
+static int dhd_suspend_resume_helper(struct dhd_info *dhd, int val, int force);
 
 static struct notifier_block dhd_notifier = {
 	.notifier_call = dhd_device_event
@@ -330,6 +334,9 @@ typedef struct dhd_info {
 	struct timer_list rpcth_timer;
 	bool rpcth_timer_active;
 	bool fdaggr;
+#endif
+#ifdef CONFIG_PM_SLEEP
+	struct notifier_block	screen_notify;
 #endif
 } dhd_info_t;
 
@@ -564,6 +571,21 @@ static int dhd_wl_host_event(dhd_info_t *dhd, int *ifidx, void *pktdata,
 static int dhd_sleep_pm_callback(struct notifier_block *nfb, unsigned long action, void *ignored)
 {
 	int ret = NOTIFY_DONE;
+	struct dhd_info *dhd = container_of(nfb, struct dhd_info, screen_notify);
+
+	switch (action) {
+	case DRM_MODE_DPMS_OFF:
+		if (dhd){
+			dhd_suspend_resume_helper(dhd, 1, 0); /* enter into low power mode */
+		}
+		break;
+	case DRM_MODE_DPMS_ON:
+		if (dhd){
+			dhd_suspend_resume_helper(dhd, 0, 0); /* enter into screen on mode */
+		}
+		break;
+
+	}
 
 #if (LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 39))
 	switch (action) {
@@ -583,12 +605,14 @@ static int dhd_sleep_pm_callback(struct notifier_block *nfb, unsigned long actio
 	return ret;
 }
 
+#if 0
 static struct notifier_block dhd_sleep_pm_notifier = {
 	.notifier_call = dhd_sleep_pm_callback,
 	.priority = 10
 };
 extern int register_pm_notifier(struct notifier_block *nb);
 extern int unregister_pm_notifier(struct notifier_block *nb);
+#endif
 #endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 27)) && defined(CONFIG_PM_SLEEP) */
 
 #if defined(DHDTHREAD) && defined(RXFRAME_THREAD)
@@ -3389,7 +3413,9 @@ dhd_attach(osl_t *osh, struct dhd_bus *bus, uint bus_hdrlen)
 	memcpy(netdev_priv(net), &dhd, sizeof(dhd));
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 27)) && defined(CONFIG_PM_SLEEP)
-	register_pm_notifier(&dhd_sleep_pm_notifier);
+	dhd->screen_notify.notifier_call = dhd_sleep_pm_callback;
+	dhd->screen_notify.priority = 10;
+	screen_register_receiver(&dhd->screen_notify);
 #endif /*  (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 27)) && defined(CONFIG_PM_SLEEP) */
 
 #if defined(CONFIG_HAS_EARLYSUSPEND) && defined(DHD_USE_EARLYSUSPEND)
@@ -4597,7 +4623,7 @@ void dhd_detach(dhd_pub_t *dhdp)
 
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 27)) && defined(CONFIG_PM_SLEEP)
-		unregister_pm_notifier(&dhd_sleep_pm_notifier);
+		screen_unregister_receiver(&dhd->screen_notify);
 #endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 27)) && defined(CONFIG_PM_SLEEP) */
 	/* && defined(CONFIG_PM_SLEEP) */
 
