@@ -2335,12 +2335,15 @@ static void bq24192_event_worker(struct work_struct *work)
 						 chrg_evt_wrkr.work);
 	int ret;
 	int disconnected = 0;
+	struct power_supply *psy;
 
 	dev_info(&chip->client->dev, "%s\n", __func__);
 
 	switch (chip->cap.chrg_evt) {
 	case POWER_SUPPLY_CHARGER_EVENT_CONNECT:
+		psy = &chip->charger;
 		pm_runtime_get_sync(&chip->client->dev);
+		kobject_uevent(&psy->dev->kobj, KOBJ_ADD);
 	case POWER_SUPPLY_CHARGER_EVENT_UPDATE:
 	case POWER_SUPPLY_CHARGER_EVENT_RESUME:
 		if ((chip->chrg_cur_cntl == USER_SET_CHRG_DISABLE) &&
@@ -2502,9 +2505,11 @@ static void bq24192_event_worker(struct work_struct *work)
 		break;
 	case POWER_SUPPLY_CHARGER_EVENT_DISCONNECT:
 		disconnected = 1;
+		psy = &chip->charger;
 		pm_runtime_put_sync(&chip->client->dev);
 		/* Cancel the maintenance worker here */
 		cancel_delayed_work_sync(&chip->maint_chrg_wrkr);
+		kobject_uevent(&psy->dev->kobj, KOBJ_REMOVE);
 	case POWER_SUPPLY_CHARGER_EVENT_SUSPEND:
 		dev_info(&chip->client->dev, "Disable charging\n");
 		ret = stop_charging(chip);
