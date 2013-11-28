@@ -1,3 +1,9 @@
+* Thu Nov 28 2013 Li Peng <peng.li@intel.com> submit/tizen_2.2_stable/20131128.022711@66d3058
+- gfx: enlarge XPROC workaround memory pool size
+- PM: charger: bq24192: Report specific events to userspace for UI usage
+- PM: net: wireless: bcmdhd: Put the WIFI into/out low power while screen off/on
+- atomisp2: set initial streaming state to disabled
+
 * Mon Nov 18 2013 Li Peng <peng.li@intel.com> submit/tizen_2.2_stable/20131107.023010@bf75087
 - change max swapchain number to 10 and 2 buffer per chain
 - config: no HDMI port on Geek, disable driver config""
