@@ -89,6 +89,9 @@ void __iomem *atomisp_io_base;
 int atomisp_pci_vendor; /* pci vendor id */
 int atomisp_pci_device; /* pci device id */
 
+static const struct firmware *
+load_firmware(struct device *dev) __attribute__((unused));
+
 int atomisp_video_init(struct atomisp_video_pipe *video, const char *name)
 {
 	int ret;
@@ -953,6 +956,34 @@ load_firmware(struct device *dev)
 	return fw;
 }
 
+static void load_firmware_callback(const struct firmware *fw, void *context)
+{
+	struct atomisp_device *isp = (struct atomisp_device *) context;
+	if (isp == NULL) {
+		dev_err(isp->dev, "isp is NULL\n");
+		return;
+	}
+
+	if (fw == NULL || fw->data == NULL) {
+		dev_err(isp->dev, "ISP get firmware is NULL\n");
+		return;
+	}
+	isp->firmware = fw;
+	dev_info(isp->dev, "Load firmware successfully\n");
+}
+
+static int load_firmware_nowait(struct atomisp_device *isp)
+{
+	int rc;
+	char *fw_path = IS_MRFLD ? MRFLD_FW_PATH : MFLD_FW_PATH;
+
+	rc = request_firmware_nowait(THIS_MODULE,
+			FW_ACTION_HOTPLUG, fw_path, isp->dev,
+			GFP_KERNEL, isp, load_firmware_callback);
+
+	return rc;
+}
+
 #define ATOM_ISP_PCI_BAR	0
 
 static int __devinit atomisp_pci_probe(struct pci_dev *dev,
@@ -1031,9 +1062,9 @@ static int __devinit atomisp_pci_probe(struct pci_dev *dev,
 		isp->max_isr_latency = CSTATE_EXIT_LATENCY_C1;
 	}
 
-	/* Load isp firmware from user space */
-	isp->firmware = load_firmware(&dev->dev);
-	if (!isp->firmware) {
+	/* Load isp firmware from user space asynchronous */
+	err = load_firmware_nowait(isp);
+	if (err) {
 		dev_err(&dev->dev, "Load firmwares failed\n");
 		goto load_fw_fail;
 	}
