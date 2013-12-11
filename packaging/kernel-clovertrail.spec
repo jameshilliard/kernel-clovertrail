@@ -23,6 +23,7 @@ BuildRequires: which
 BuildRequires: flex
 BuildRequires: bison
 BuildRequires: libnl2-devel
+BuildRequires: openssl
 ExclusiveArch: %{ix86}
 
 Provides: kernel = %{version}-%{release}
