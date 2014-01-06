@@ -1526,7 +1526,6 @@ static int synaptics_rmi4_probe(struct i2c_client *client,
 	set_bit(KEY_HOME, ts->input_dev->keybit);
 	//set_bit(KEY_SEARCH, ts->input_dev->keybit);
 	set_bit(BTN_TOUCH, ts->input_dev->keybit);
-	set_bit(BTN_2, ts->input_dev->keybit);
 
 /*shihuiqin 20110519 added for touchkey--*/
 
