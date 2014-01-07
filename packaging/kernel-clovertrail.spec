@@ -37,6 +37,7 @@ AutoProv: yes
 
 Source0: %{name}-%{version}.tar.bz2
 Source1: cmdline
+Source1001: kernel-clovertrail.manifest
 
 # Maintain these patches without the help of git-buildpackage
 # GbpIgnorePatch: 0
@@ -83,6 +84,7 @@ as well as various kernel internal events.
 ### BUILD
 ###
 %build
+cp %{SOURCE1001} .
 # Make sure EXTRAVERSION says what we want it to say
 sed -i "s/^EXTRAVERSION.*/EXTRAVERSION = -%{release}-%{variant}/" Makefile
 
@@ -211,6 +213,7 @@ fi
 ### FILES
 ###
 %files
+%manifest %{name}.manifest
 %defattr(-,root,root)
 /boot/vmlinuz-%{kernel_full_version}
 /boot/System.map-%{kernel_full_version}
@@ -229,11 +232,13 @@ fi
 
 
 %files devel
+%manifest %{name}.manifest
 %defattr(-,root,root)
 %verify(not mtime) /usr/src/kernels/%{kernel_full_version}
 /lib/modules/%{kernel_full_version}/vmlinux
 
 %files -n perf
+%manifest %{name}.manifest
 %defattr(-,root,root)
 /usr/bin/perf
 /usr/libexec/perf-core/*
