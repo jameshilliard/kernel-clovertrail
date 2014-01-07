@@ -1,0 +1,8 @@
+Code-Review+2: Chengwei Yang <chengwei.yang@intel.com>
+Code-Review+1: Kangkai Yin <kangkai.yin@intel.com>
+Verified+1: wu <zhiwen.wu@linux.intel.com>
+Submitted-by: Chengwei Yang <chengwei.yang@intel.com>
+Submitted-at: Tue, 07 Jan 2014 00:15:35 -0800
+Reviewed-on: https://review.tizen.org/gerrit/14523
+Project: platform/kernel/kernel-clovertrail
+Branch: refs/heads/tizen
